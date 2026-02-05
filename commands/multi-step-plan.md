@@ -65,7 +65,6 @@ Phases:
    - test cases (e.g. unit test, integration test)
    - verification steps
    - acceptance/success criteria
-   Save the validation specification as a markdown file at: ./validation_specs/validation_{current_ts}.md
 
 7. Final Execution Plan  
    Produce a concrete, ordered, implementation-ready plan that accounts for:
@@ -73,6 +72,19 @@ Phases:
    - Constraints
    - Research findings
    - Validation strategy
-   After the user explicitly approves the final plan, save this final plan as a markdown file at: ./execution_plans/plan_{current_ts}.md
+   STOP and wait for user approval.
+
+8. Session Name + Save Artifacts  
+   After the user has approved the finalized requirements, validation criteria, and implementation plan:
+   1) Create a proper, filesystem-safe name for the current task/session for later usage.
+      - Check `./plan-build-validate/sessions` first to ensure no duplicate name exists.
+      - If a duplicate exists, adjust the name deterministically (e.g., append `-2`, `-3`, etc.) until unique.
+   2) Create the session folder: `./plan-build-validate/sessions/<a-proper-name>/`
+   3) Save the finalized user requirements (including any supplements, clarifications, and disambiguation obtained from the user) to:
+      - `./plan-build-validate/sessions/<a-proper-name>/user_requirements.md`
+   4) Save the validation requirements and acceptance criteria (the finalized Phase 6 output) to:
+      - `./plan-build-validate/sessions/<a-proper-name>/validation_criteria.md`
+   5) Save ONLY the implementation part of the final plan (the finalized Phase 7 output) to:
+      - `./plan-build-validate/sessions/<a-proper-name>/implementation_plan.md`
 
 Below is the user's requirement: $ARGUMENTS
