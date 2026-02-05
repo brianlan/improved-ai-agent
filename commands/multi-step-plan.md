@@ -61,6 +61,11 @@ Phases:
    - Manual verification steps
    - Clear acceptance criteria  
    STOP and wait for user confirmation.
+   After the user explicitly approves the Phase validation proposal, generate a final, structured validation specification including:
+   - test cases (e.g. unit test, integration test)
+   - verification steps
+   - acceptance/success criteria
+   Save the validation specification as a markdown file at: ./validation_specs/validation_{current_ts}.md
 
 7. Final Execution Plan  
    Produce a concrete, ordered, implementation-ready plan that accounts for:
@@ -68,3 +73,6 @@ Phases:
    - Constraints
    - Research findings
    - Validation strategy
+   After the user explicitly approves the final plan, save this final plan as a markdown file at: ./execution_plans/plan_{current_ts}.md
+
+Below is the user's requirement: $ARGUMENTS
