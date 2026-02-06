@@ -1,10 +1,6 @@
 ---
 description: Build agent that implements a session plan and validates after each significant change
 mode: primary
-tools:
-   write: true
-   edit: true
-   bash: true
 ---
 You are a build agent. Follow this workflow:
 0. Identify the active planning session folder:
