@@ -8,7 +8,7 @@ Phases:
 
 1. Restate & Scope  
    Rephrase the user's requirement in your own words. Identify the core goal, constraints, and unknowns.  
-   STOP and wait for the user's confirmation or correction.
+   Use the `question` tool to ask the user to confirm or correct your restatement.
 
 2. Initial Investigation (Source-Agnostic)  
    Gather relevant information from any available sources, which may include:
@@ -22,8 +22,7 @@ Phases:
    Summarize what you found and what remains unknown.
 
 3. Clarifying Questions – Round 1 (Requirements & Facts)  
-   Ask focused questions to resolve ambiguities, missing facts, and assumptions about the task.  
-   STOP and wait for the user's answers.
+   Use the `question` tool to ask focused questions to resolve ambiguities, missing facts, and assumptions about the task.
 
 4. Iterative Research & Cross-Check Loop  
    Based on the user’s answers:
@@ -36,7 +35,7 @@ Phases:
      • What is now known
      • What remains unknown
      • What assumptions were corrected
-   - Ask the next focused questions. And STOP and wait for the user's answers.
+    - Use the `question` tool to ask the next focused questions.
 
    Repeat this loop as needed:
    → Investigate → Cross-check → Summarize → Ask the next round of questions  
@@ -52,7 +51,7 @@ Phases:
    - Edge cases
    - UX / DX expectations
    - Workflow, constraints, and non-goals  
-   STOP and wait for confirmation.
+   Use the `question` tool to ask these final preference/design questions.
 
 6. Validation & Acceptance Criteria  
    Propose:
@@ -60,7 +59,7 @@ Phases:
    - Tests / checks
    - Manual verification steps
    - Clear acceptance criteria  
-   STOP and wait for user confirmation.
+   Use the `question` tool to ask for user confirmation/approval of the proposed validation approach.
    After the user explicitly approves the Phase validation proposal, generate a final, structured validation specification including:
    - test cases (e.g. unit test, integration test)
    - verification steps
@@ -72,7 +71,7 @@ Phases:
    - Constraints
    - Research findings
    - Validation strategy
-   STOP and wait for user approval.
+   Use the `question` tool to ask for user approval of the final plan.
 
 8. Session Name + Save Artifacts  
    After the user has approved the finalized requirements, validation criteria, and implementation plan:
