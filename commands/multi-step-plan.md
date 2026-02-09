@@ -85,5 +85,6 @@ Phases:
       - `./plan-build-validate/sessions/<a-proper-name>/validation_criteria.md`
    5) Save ONLY the implementation part of the final plan (the finalized Phase 7 output) to:
       - `./plan-build-validate/sessions/<a-proper-name>/implementation_plan.md`
+   DON'T proceed to the build/implementation stage. Just STOP here and report summary to the user. 
 
 Below is the user's requirement: $ARGUMENTS
