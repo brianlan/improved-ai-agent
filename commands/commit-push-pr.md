@@ -1,4 +1,4 @@
-1. Inspect the current git status and git diff.
+1. Inspect the current git status and git diff (leave untracked files as-is).
 2. Stage only relevant modified/added files (do not include unrelated or generated files).
 3. Write a clear commit message:
 Format:
