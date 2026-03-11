@@ -23,6 +23,8 @@ Execute these steps in order. Each step is independent and should complete befor
 Run the official oh-my-zsh installation script unattended:
 
 ```bash
+# Skip if already installed
+[ -d "$HOME/.oh-my-zsh" ] && echo "oh-my-zsh already installed" || \
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 ```
 
@@ -36,14 +38,32 @@ This will:
 Clone the zsh-autosuggestions plugin to the oh-my-zsh custom plugins directory:
 
 ```bash
+# Skip if already installed
+[ -d "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ] && echo "zsh-autosuggestions already installed" || \
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 ```
 
-Then edit `~/.zshrc` to add `zsh-autosuggestions` to the plugins array:
+Then edit `~/.zshrc` to add `zsh-autosuggestions` to the plugins array (if not already present):
 
 ```bash
 # Find the line: plugins=(git)
 # Change to: plugins=(git zsh-autosuggestions)
+```
+
+### Step 2b (Optional): Install zsh-syntax-highlighting
+
+Another popular zsh plugin that highlights commands as you type:
+
+```bash
+# Skip if already installed
+[ -d "$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting" ] && echo "zsh-syntax-highlighting already installed" || \
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+```
+
+Add to plugins (must be last in the plugin list):
+
+```bash
+# plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 ```
 
 ### Step 3: Install autojump
@@ -51,25 +71,30 @@ Then edit `~/.zshrc` to add `zsh-autosuggestions` to the plugins array:
 Clone autojump from GitHub and run the Python installer:
 
 ```bash
-git clone --depth 1 https://github.com/wting/autojump.git /tmp/autojump && cd /tmp/autojump && python install.py
+# Skip if already installed
+[ -d "$HOME/.autojump" ] && echo "autojump already installed" || \
+(git clone --depth 1 https://github.com/wting/autojump.git /tmp/autojump && \
+cd /tmp/autojump && python3 install.py && rm -rf /tmp/autojump)
 ```
 
 After installation, add the source line to `~/.zshrc`:
 
 ```bash
 # Add to end of ~/.zshrc:
-[[ -s /home/rlan/.autojump/etc/profile.d/autojump.sh ]] && source /home/rlan/.autojump/etc/profile.d/autojump.sh
+[[ -s "$HOME/.autojump/etc/profile.d/autojump.sh" ]] && source "$HOME/.autojump/etc/profile.d/autojump.sh"
 ```
 
-Note: Adjust the path if the home directory is different - use the actual home path from the install output.
+Note: Uses `$HOME` to work on any machine.
 
 ### Step 4: Install amix/vimrc
 
 Clone the vimrc repository directly to `~/.vim_runtime` and run the installer:
 
 ```bash
-git clone --depth=1 https://github.com/amix/vimrc.git ~/.vim_runtime
-sh ~/.vim_runtime/install_awesome_vimrc.sh
+# Skip if already installed
+[ -d "$HOME/.vim_runtime" ] && echo "vimrc already installed" || \
+(git clone --depth=1 https://github.com/amix/vimrc.git ~/.vim_runtime && \
+sh ~/.vim_runtime/install_awesome_vimrc.sh)
 ```
 
 This installs the "Awesome Vim Configuration" with many plugins and sensible defaults.
@@ -141,16 +166,25 @@ After all steps complete, verify the setup:
 source ~/.zshrc
 
 # Check oh-my-zsh
-echo $ZSH  # Should show ~/.oh-my-zsh
+echo "ZSH: $ZSH"
+
+# Check zsh-autosuggestions
+zpty -t zsh_autosuggestions 2>/dev/null && echo "zsh-autosuggestions: OK" || echo "zsh-autosuggestions: loaded via plugin"
 
 # Check autojump
-j --help  # Should show autojump help
+j --help >/dev/null 2>&1 && echo "autojump: OK" || echo "autojump: FAIL"
+
+# Check vimrc
+[ -f "$HOME/.vim_runtime/vimrcs/awesome.vim" ] && echo "vimrc: OK" || echo "vimrc: FAIL"
 
 # Check nvm
-nvm --version  # Should show version number
+nvm --version >/dev/null 2>&1 && echo "nvm: $(nvm --version)" || echo "nvm: FAIL"
 
 # Check conda
-conda --version  # Should show version number
+conda --version >/dev/null 2>&1 && echo "conda: $(conda --version)" || echo "conda: FAIL"
+
+# Check mamba
+mamba --version >/dev/null 2>&1 && echo "mamba: $(mamba --version)" || echo "mamba: FAIL"
 ```
 
 ## Notes
