@@ -40,11 +40,17 @@ todowrite(todos=[
   // Step 4: Cleanup
   { content: "Step 4: Fix sentence continuity via writing subagent", status: "pending", priority: "high" },
   
-  // Step 5: Proposition handling
-  { content: "Step 5: Wrap angle-bracket propositions in backticks", status: "pending", priority: "medium" },
+  // Step 5: Cross-check
+  { content: "Step 5: Cross-check merged doc against individual OCR files via Oracle subagent", status: "pending", priority: "high" },
   
-  // Step 6: Header rectification
-  { content: "Step 6: Rectify header levels via writing subagent", status: "pending", priority: "medium" },
+  // Step 6: Proposition handling
+  { content: "Step 6: Wrap angle-bracket propositions in backticks", status: "pending", priority: "medium" },
+  
+  // Step 7: Header rectification
+  { content: "Step 7: Rectify header levels via writing subagent", status: "pending", priority: "medium" },
+  
+  // Step 8: Final formatting
+  { content: "Step 8: Final formatting — escape leading + characters", status: "pending", priority: "medium" },
 ])
 ```
 
@@ -175,7 +181,80 @@ Read the file at ./workspace/ocr_results_vlm/merged_{start}-{end}.md and output 
 )
 ``` 
 
-### Step 5: Argument Proposition Handling
+### Step 5: Cross-Check Merged Document (Quality Assurance)
+
+**CRITICAL: This step catches hallucinations, missing content, and repeated text that may have been introduced during cleanup.**
+
+Use the Oracle subagent to cross-check the cleaned merged document against the individual OCR page files.
+
+**Todo Tracking:**
+- Mark "Step 5: Cross-check merged doc..." todo `in_progress` before invoking Oracle
+- Mark `completed` after verification report is received
+
+**Cross-Check Prompt:**
+```
+You are a quality assurance reviewer for an OCR textbook project. Your task is to verify the integrity of a cleaned, merged document.
+
+**Input:**
+1. Individual OCR page files: ./workspace/ocr_results_vlm/page_{NNN}.md (pages {start}-{end})
+2. Cleaned merged document: ./workspace/ocr_results_vlm/merged_{start}-{end}.md
+
+**Your Task:**
+1. Read ALL individual OCR page files
+2. Read the cleaned merged document
+3. Perform a thorough cross-check:
+
+**Check 1: Missing Content**
+- Identify any paragraphs, sentences, or content present in individual pages but MISSING from the merged document
+- Check each page's content is represented in the merged doc
+
+**Check 2: Hallucinated Content**
+- Identify any content in the merged document that does NOT appear in any of the individual page files
+- Flag sentences or phrases that seem to have been invented during cleanup
+
+**Check 3: Repeated Content**
+- Identify duplicated paragraphs or sentences in the merged document
+- Check for content that appears multiple times unnecessarily
+
+**Output Format:**
+```
+## QA Report
+
+### Missing Content
+- [List any missing content with page references, or "None found"]
+
+### Hallucinated Content  
+- [List any hallucinated content with specific examples, or "None found"]
+
+### Repeated Content
+- [List any duplicated content with locations, or "None found"]
+
+### Overall Assessment
+- [PASS / FAIL with reasoning]
+
+### Recommended Fixes
+- [If FAIL, list specific fixes needed]
+```
+
+**CRITICAL:** Be thorough and precise. Cite specific page numbers and quote relevant text. If you find issues, this report will be used to fix the document.
+```
+
+**Subagent Invocation:**
+```
+task(
+  subagent_type="oracle",
+  run_in_background=false,
+  load_skills=[],
+  description="Cross-check merged OCR document",
+  prompt="[Insert Cross-Check Prompt above]"
+)
+```
+
+**After Oracle Report:**
+- If Oracle reports **PASS**: Proceed to Step 6
+- If Oracle reports **FAIL**: Review the recommended fixes, manually correct the merged document, then optionally re-run this step to verify
+
+### Step 6: Argument Proposition Handling
 
 Update the merged document if it contains argument analysis with proposition in angle brackets like:
 - (A) <My client is innocent> because (B) <she was defending herself>
@@ -186,17 +265,17 @@ The `<a sentence>` format is used to denote propositions in logical arguments (c
 - ✅ (A) `<My client is innocent>` because (B) `<she was defending herself>`
 
 **Todo Tracking:**
-- Mark "Step 5: Wrap angle-bracket propositions..." todo `in_progress`
+- Mark "Step 6: Wrap angle-bracket propositions..." todo `in_progress`
 - Use `grep` to find patterns like `(A) <...>` or `(B) <...>`
 - Use `edit` tool to wrap propositions in backticks
 - Mark `completed` after all propositions are fixed
 
-### Step 6: Rectify Header Levels
+### Step 7: Rectify Header Levels
 
 Use an LLM to fix header levels based on the book's table of contents structure.
 
 **Todo Tracking:**
-- Mark "Step 6: Rectify header levels..." todo `in_progress` before invoking subagent
+- Mark "Step 7: Rectify header levels..." todo `in_progress` before invoking subagent
 - Mark `completed` after rectification succeeds
 
 **ToC Header Convention:**
@@ -232,6 +311,43 @@ Read the file at ./workspace/ocr_results_vlm/merged_{start}-{end}.md and output 
 )
 ```
 
+### Step 8: Final Formatting
+
+Apply final formatting fixes to the merged document.
+
+**Todo Tracking:**
+- Mark "Step 8: Final formatting..." todo `in_progress`
+- Apply formatting rules below
+- Mark `completed` after all fixes are applied
+
+**Formatting Rules:**
+
+| Rule | Problem | Solution |
+|------|---------|----------|
+| Leading `+` character | Markdown renders `+ text` as bullet point | Replace with `&#43;text` (HTML entity) |
+
+**How to Apply:**
+
+1. Use `grep` to find lines starting with `+`:
+   ```bash
+   grep -n "^+" ./workspace/ocr_results_vlm/merged_*.md
+   ```
+
+2. Use `edit` tool to replace:
+   - `+ ` at start of line → `&#43; ` (with space after)
+   - `+` at start of line (no space) → `&#43;`
+
+**Example:**
+```markdown
+# Before (renders incorrectly as bullet)
++ This is a sentence that starts with plus.
+
+# After (renders correctly as text)
+&#43; This is a sentence that starts with plus.
+```
+
+**Note:** Only replace `+` at the **beginning of a line** (after optional whitespace). Do NOT replace `+` in the middle of sentences.
+
 ## Scripts
 
 - `scripts/extract_pages.py` - Extract PDF pages as PNG images
@@ -250,8 +366,10 @@ todowrite(todos=[
   { content: "Step 2.14: OCR page 91 — write to ./workspace/ocr_results_vlm/page_091.md", status: "pending", priority: "high" },
   { content: "Step 3: Merge pages to ./workspace/ocr_results_vlm/merged_78-91.md", status: "pending", priority: "high" },
   { content: "Step 4: Fix sentence continuity via writing subagent", status: "pending", priority: "high" },
-  { content: "Step 5: Wrap angle-bracket propositions in backticks", status: "pending", priority: "medium" },
-  { content: "Step 6: Rectify header levels via writing subagent", status: "pending", priority: "medium" },
+  { content: "Step 5: Cross-check merged doc against individual OCR files via Oracle subagent", status: "pending", priority: "high" },
+  { content: "Step 6: Wrap angle-bracket propositions in backticks", status: "pending", priority: "medium" },
+  { content: "Step 7: Rectify header levels via writing subagent", status: "pending", priority: "medium" },
+  { content: "Step 8: Final formatting — escape leading + characters", status: "pending", priority: "medium" },
 ])
 ```
 
@@ -267,6 +385,10 @@ todowrite(todos=[
 
 **4. Cleanup:** Mark Step 4 todo `in_progress`, invoke `task(category="writing", ...)`, mark `completed`
 
-**5. Propositions:** Mark Step 5 todo `in_progress`, use `grep` + `edit` to fix, mark `completed`
+**5. Cross-check:** Mark Step 5 todo `in_progress`, invoke `task(subagent_type="oracle", ...)`, review QA report, apply fixes if needed, mark `completed`
 
-**6. Headers:** Mark Step 6 todo `in_progress`, invoke `task(category="writing", ...)`, mark `completed`
+**6. Propositions:** Mark Step 6 todo `in_progress`, use `grep` + `edit` to fix, mark `completed`
+
+**7. Headers:** Mark Step 7 todo `in_progress`, invoke `task(category="writing", ...)`, mark `completed`
+
+**8. Final Formatting:** Mark Step 8 todo `in_progress`, use `grep` to find leading `+`, use `edit` to replace with `&#43;`, mark `completed`
