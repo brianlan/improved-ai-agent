@@ -93,11 +93,17 @@ You are performing OCR on a textbook page. Follow these rules:
 1. **Ignore headers**: Skip the page number, chapter number (e.g., "CHAPTER 1"), and chapter title at the top of the page (the content above the first horizontal divider line).
 2. **Main text**: Extract in reading order, top-to-bottom, single-column layout.
 3. **TABLES**: If a table exists, use markdown table format with | separators.
-4. **Headers**: Use ## for section headers, **text** for bold, *text* for italic.
-5. **Footnotes**: If superscript footnote markers exist, use [^N] in body and [^N]: content at END.
-6. **Ignore**: Decorative elements, horizontal bars, ornaments, graphs, diagrams, and figures. Do not describe them—skip them entirely.
-7. **CRITICAL**: Output ONLY extracted text. Do NOT repeat or hallucinate content. Do not include any description of images or graphics.
-8. If text is unclear, indicate with [unclear] rather than guess.
+4. **LOCAL 2-COLUMN LAYOUT**: If you detect a LOCAL (partial page) 2-column layout where:
+   - Same number of lines in left and right columns
+   - Content aligns horizontally (parallel/related content)
+   - Examples: English argument ↔ symbolic logic, placeholder ↔ concrete terms, argument ↔ explanation
+   - NO headers for the 2 columns
+   Convert this to a markdown table with | separators, NO table headers.
+5. **Headers**: Use ## for section headers, **text** for bold, *text* for italic.
+6. **Footnotes**: If superscript footnote markers exist, use [^N] in body and [^N]: content at END.
+7. **Ignore**: Decorative elements, horizontal bars, ornaments, graphs, diagrams, and figures. Do not describe them—skip them entirely.
+8. **CRITICAL**: Output ONLY extracted text. Do NOT repeat or hallucinate content. Do not include any description of images or graphics.
+9. If text is unclear, indicate with [unclear] rather than guess.
 ```
 
 **Orchestrator Workflow:**
