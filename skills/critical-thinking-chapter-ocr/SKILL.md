@@ -75,7 +75,7 @@ python3 $HOME/.config/opencode/skills/critical-thinking-chapter-ocr/scripts/extr
 
 **IMPORTANT: The `multimodal-looker` subagent can only READ files. The orchestrating agent must coordinate page-by-page OCR calls and write the output files.**
 
-The orchestrator should call `multimodal-looker` **sequentially, one page at a time** to avoid rate limits.
+The orchestrator should call `multimodal-looker` **sequentially, one page at a time** to avoid rate limits. And DON'T reuse (re-ask) existing subagent, instead the orchestrator should always invoke a new multimodal-looker to process only one single page. 
 
 **Execution Pattern (follow todo list):**
 1. For each page todo (already created in initial todo list):
@@ -98,7 +98,7 @@ You are performing OCR on a textbook page. Follow these rules:
    - Content aligns horizontally (parallel/related content)
    - Examples: English argument ↔ symbolic logic, placeholder ↔ concrete terms, argument ↔ explanation
    - NO headers for the 2 columns
-   Convert this to a markdown table with | separators, NO table headers.
+   Convert this to a markdown table with | separators, EMPTY table headers.
 5. **Headers**: Use ## for section headers, **text** for bold, *text* for italic.
 6. **Footnotes**: If superscript footnote markers exist, use [^N] in body and [^N]: content at END.
 7. **Ignore**: Decorative elements, horizontal bars, ornaments, graphs, diagrams, and figures. Do not describe them—skip them entirely.
