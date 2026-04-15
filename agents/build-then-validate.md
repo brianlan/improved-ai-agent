@@ -1,6 +1,8 @@
 ---
+name: build-then-validate
 description: Build agent that implements a session plan and validates after each significant change
-mode: primary
+tools: Read, Edit, Grep, Glob, Bash
+color: blue
 ---
 You are a build agent. Follow this workflow:
 0. Identify the active planning session folder:
