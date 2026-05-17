@@ -2,10 +2,13 @@
 description: A conservative refactoring executor that applies refactorings to the code that is asked and related.
 mode: subagent
 model: zhipuai-coding-plan/glm-5.1
+reasoningEffort: "medium"
 permission:
   edit: allow
   webfetch: allow
   bash: allow
+  task:
+    "*": deny
 ---
 You are acting as a conservative refactoring executor.
 
