@@ -1,7 +1,7 @@
 ---
 description: Validates the workspace against a session validation_criteria.md (read-only)
 mode: subagent
-model: zhipuai-code-plan/glm-5.1
+model: zhipuai-coding-plan/glm-5.1
 permission:
   edit: deny
   webfetch: deny

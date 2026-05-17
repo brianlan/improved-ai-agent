@@ -1,7 +1,7 @@
 ---
 description: Build agent that implements a session plan and validates after each significant change
 mode: primary
-model: zhipuai-code-plan/glm-5.1
+model: zhipuai-coding-plan/glm-5.1
 permission:
   edit: allow
   webfetch: deny
