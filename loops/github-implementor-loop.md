@@ -2,7 +2,7 @@ Execute the following tasks in strict priority order. Complete at most one actio
 
 General rules:
 * Use the `gh` CLI for all GitHub queries and updates.
-* Be idempotent. Do not repeatedly process the same PR comment, review thread, conflict, issue, or branch update if it has already been handled.
+* Be idempotent. Do not repeatedly process the same PR comment, review thread, conflict, issue, branch update, recommended improvement, or follow-up suggestion if it has already been handled.
 * Before making any code change, verify:
   - target issue/PR number,
   - current directory,
@@ -34,8 +34,10 @@ Priority 1: Maintain Existing PRs
 Goal:
 * Before starting new issues, handle open PRs that need action.
 * A PR needs action if it has:
-  - unresolved or unaddressed reviewer feedback,
+  - unresolved or unaddressed required reviewer feedback,
   - reviewer-agent feedback marked as requiring action,
+  - reviewer-agent feedback marked as recommended action,
+  - reviewer-agent feedback recommending a follow-up issue,
   - merge conflicts caused by changes in the base branch,
   - or a base-branch update requirement that prevents merging.
 
@@ -52,34 +54,62 @@ Detection:
   - review summaries,
   - inline review comments,
   - unresolved review threads,
-  - regular PR comments that clearly request changes,
+  - regular PR comments that clearly request or recommend changes,
   - comments containing markers such as:
     - `Agent-Review: reviewer`
-    - `Action-Required: true`
     - `Review-Decision: REQUEST_CHANGES`
+    - `Review-Decision: COMMENT_ONLY`
+    - `Action-Required: true`
+    - `Action-Recommended: true`
+    - `Follow-Up-Recommended: true`
     - `Review-Commit: <sha>`
 * If reviewer and implementor use the same GitHub account, do not rely on author identity alone. Use timestamps, content, markers, and commit history.
 
+Review feedback semantics:
+* `REQUEST_CHANGES` or `Action-Required: true` means the feedback must be handled before proceeding to new issues.
+* `COMMENT_ONLY` does not automatically mean “no action needed.”
+* For COMMENT_ONLY feedback:
+  - if `Action-Recommended: true`, evaluate it and either implement it, explicitly defer it, or ask for clarification;
+  - if `Follow-Up-Recommended: true`, consider creating a follow-up issue instead of modifying the current PR;
+  - if both `Action-Recommended: false` and `Follow-Up-Recommended: false`, treat it as informational unless the text clearly requests action.
+* `APPROVE` with no required, recommended, or follow-up action does not require implementation work unless the PR has conflicts, failed checks, or base-branch update issues.
+
 Actionability:
 * Reviewer feedback is actionable if:
-  - it asks for a code, test, documentation, or behavior change, and
-  - it has not been addressed by a later commit or a direct explanatory reply.
+  - it asks for or recommends a code, test, documentation, behavior, or follow-up change, and
+  - it has not been handled by a later commit, a direct explanatory reply, or a follow-up issue.
+* Feedback is considered handled if one of the following happened after the feedback:
+  - a commit plausibly implemented the requested or recommended change,
+  - the implementor replied explaining why it is not being done,
+  - the implementor asked for clarification,
+  - a follow-up issue was created and linked,
+  - or a later reviewer review superseded the feedback.
 * If feedback contains `Review-Commit: <sha>`:
-  - if the current PR head SHA equals that SHA, the feedback is not yet addressed;
-  - if newer commits exist, inspect whether they plausibly addressed the feedback.
+  - if the current PR head SHA equals that SHA, the feedback has not been handled by code changes yet;
+  - if newer commits exist, inspect whether they plausibly addressed the feedback before deciding what remains.
+* To avoid repeated handling, when replying to reviewer feedback include a short machine-readable block such as:
+
+Agent-Review-Handled: implementor
+Handled-Review-Commit: <Review-Commit>
+Handled-Decision: IMPLEMENTED | DEFERRED | FOLLOW_UP_ISSUE | CLARIFICATION_REQUESTED
+Handled-Reason: <brief reason>
+
+Merge/base-branch maintenance:
 * A PR also needs action if it was previously approved or otherwise ready, but is now not mergeable because the base branch changed.
 * Treat merge/base-branch maintenance as actionable when:
   - `mergeable` is `CONFLICTING`,
   - `mergeStateStatus` indicates conflict or dirty state,
   - GitHub says the branch cannot be merged cleanly,
   - or the branch is behind the base branch and branch protection requires it to be updated.
-* Prefer PRs with:
-  - `REQUEST_CHANGES`,
-  - `Action-Required: true`,
-  - unresolved review threads,
-  - merge conflicts,
-  - failed checks caused by the PR,
-  - or PRs blocked only because the base branch changed.
+
+Priority within Priority 1:
+Handle the highest-priority actionable PR task in this order:
+1. Merge conflicts or base-branch updates that block merging.
+2. `REQUEST_CHANGES` or `Action-Required: true`.
+3. Failed checks caused by the PR.
+4. `COMMENT_ONLY` with `Action-Recommended: true`.
+5. `Follow-Up-Recommended: true`.
+6. Other unresolved review threads or clearly actionable comments.
 
 Handling:
 * Select the highest-priority actionable PR and handle only that PR this turn.
@@ -89,11 +119,7 @@ Handling:
      `git fetch origin`
   2. Ensure the worktree is on the PR branch and clean.
   3. Inspect reviewer feedback, review comments, regular PR comments, commits, checks, and mergeability.
-  4. If reviewer feedback is actionable:
-     - implement reasonable requested changes,
-     - or reply explaining why a requested change is unnecessary, obsolete, incorrect, or unsafe,
-     - or ask for clarification if the feedback is ambiguous.
-  5. If the PR is blocked because the base branch changed:
+  4. If the PR is blocked because the base branch changed:
      - fetch the latest base branch from `origin/<baseRefName>`,
      - merge `origin/<baseRefName>` into the PR branch by default,
      - use rebase only if the repository convention clearly prefers rebase,
@@ -101,13 +127,26 @@ Handling:
      - run relevant validation commands,
      - commit the merge/conflict-resolution result if needed,
      - push the PR branch.
-  6. If tests fail:
+  5. If feedback is required:
+     - implement the requested change if reasonable and safe,
+     - or reply explaining why the requested change is unnecessary, obsolete, incorrect, or unsafe,
+     - or ask for clarification if the feedback is ambiguous.
+  6. If feedback is COMMENT_ONLY with `Action-Recommended: true`:
+     - evaluate the suggestion instead of ignoring it,
+     - implement it if it is small, clearly beneficial, and low risk,
+     - otherwise reply that it is being deferred and briefly explain why,
+     - if appropriate, create and link a follow-up issue.
+  7. If feedback has `Follow-Up-Recommended: true`:
+     - create a follow-up issue if the suggestion is valid but outside the current PR scope,
+     - link the follow-up issue in a PR reply,
+     - do not unnecessarily expand the current PR scope.
+  8. If tests fail:
      - fix failures related to the PR changes when possible,
      - otherwise document the failure clearly in a PR reply.
-  7. After pushing changes, optionally reply on the PR summarizing what was addressed.
+  9. After pushing changes or replying, summarize what was addressed and include the handling marker when useful.
 
 Completion:
-* After pushing a fix, resolving a conflict, updating the PR branch from the base branch, replying to a reviewer, or asking for clarification, stop and wait for the next turn.
+* After pushing a fix, resolving a conflict, updating the PR branch from the base branch, replying to a reviewer, creating a follow-up issue, or asking for clarification, stop and wait for the next turn.
 * If no open PR needs action, proceed to Priority 2.
 
 Priority 2: Tackle Unassigned Issues
