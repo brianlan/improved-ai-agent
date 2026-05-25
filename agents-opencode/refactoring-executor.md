@@ -7,6 +7,7 @@ permission:
   edit: allow
   webfetch: allow
   bash: allow
+  skill: deny
   task:
     "*": deny
 ---

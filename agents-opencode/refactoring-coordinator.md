@@ -1,12 +1,13 @@
 ---
 description: A conservative refactoring workflow coordinator who manages a controlled refactoring process, but making no modifications to any code.
 mode: primary
-model: tencent-coding-plan/glm-5
+model: openai/gpt-5.4
 reasoningEffort: "medium"
 permission:
   edit: deny
   webfetch: allow
   bash: allow
+  skill: deny
   task:
     "*": deny
     code-smell-detector: "allow"
