@@ -49,7 +49,7 @@ Paste any repo-specific architecture, test commands, labels, milestones, existin
 You must perform the work in this order:
 
 1. Parse the requirement document.
-2. Extract requirement IDs, workflows, data/domain entities, non-functional requirements, acceptance criteria, edge cases, non-goals, and decision-log constraints.
+2. Extract outcomes/objectives, workflows, system responsibilities and boundaries, assumptions and constraints, requirement IDs, data/domain entities, non-functional requirements, operations/lifecycle requirements, acceptance criteria, edge cases, non-goals, decision-log constraints, open questions, and traceability mappings.
 3. Identify natural implementation areas:
    - domain / business logic
    - data model / persistence
@@ -256,13 +256,16 @@ Include a `Requirement Traceability` section in each issue body, listing relevan
 
 * FR-xx
 * NFR-xx
-* DD-xx
-* EC-xx
+* OPS-xx
+* OBS-xx
+* EDGE-xx
 * AC-xx
+* D-xx
+* OQ-xx
 * workflow IDs
 * decision-log entries
 
-If the source document does not have explicit IDs, create stable inferred IDs during analysis.
+Preserve existing ID prefixes exactly as written in the source document. If the source document does not have explicit IDs, create stable inferred IDs during analysis.
 
 ### Acceptance Criteria
 
@@ -329,13 +332,20 @@ Before creating issues, produce a planning summary with the following sections.
 
 List the major requirements grouped by category:
 
+* outcomes/objectives and success metrics
 * workflows
+* system responsibilities and boundaries
+* assumptions and constraints
 * functional requirements
 * non-functional requirements
 * data/domain requirements
+* operations/lifecycle requirements
 * edge cases
 * observability/auditability
 * acceptance criteria
+* decision-log constraints
+* open questions
+* source traceability mappings
 * non-goals
 
 Do not copy the entire requirement document. Summarize and preserve IDs.
@@ -370,7 +380,7 @@ Create a table:
 
 | Temp ID | Title | Area             | Depends On | Blocks | Requirement IDs | Required Tests    | Notes |
 | ------- | ----- | ---------------- | ---------- | ------ | --------------- | ----------------- | ----- |
-| T01     | ...   | Backend / Domain | None       | T02    | FR-01, DD-01    | Domain unit tests | ...   |
+| T01     | ...   | Backend / Domain | None       | T02    | FR-01, OPS-01   | Domain unit tests | ...   |
 
 The `Required Tests` column is mandatory.
 
@@ -383,6 +393,10 @@ Identify:
 * unclear requirements,
 * missing API contracts,
 * missing persistence details,
+* unresolved open questions from the source document,
+* assumptions or constraints that materially shape implementation,
+* decision-log entries that constrain the solution,
+* operations/lifecycle requirements that affect sequencing or deployment,
 * possible conflicts with existing architecture,
 * performance risks,
 * testability risks,
@@ -508,6 +522,8 @@ Briefly describe what this issue implements and why it exists.
 
 Explain the relevant part of the requirement document in plain engineering language.
 
+Include any relevant outcomes, system boundaries, assumptions/constraints, operations/lifecycle requirements, decision-log entries, or open questions that affect this issue.
+
 ## Scope
 
 - [ ] Item 1
@@ -613,9 +629,12 @@ Related requirements:
 
 * FR-xx
 * NFR-xx
-* DD-xx
-* EC-xx
+* OPS-xx
+* OBS-xx
+* EDGE-xx
 * AC-xx
+* D-xx
+* OQ-xx
 
 
 Important:
