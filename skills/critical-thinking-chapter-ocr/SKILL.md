@@ -1,6 +1,6 @@
 ---
 name: critical-thinking-chapter-ocr
-description: OCR textbook pages from a PDF using VLM (multimodal-looker subagent) and merge into a single markdown document with sentence continuity fixes. Use when extracting text from PDF textbooks for: (1) Converting PDF pages to markdown, (2) Batch OCR processing a page range, (3) Extracting textbook content with footnotes and tables, (4) Processing academic books with headers, footnotes, and diagrams, (5) Merging multiple OCR pages into one document with proper sentence flow.
+description: OCR textbook pages from a PDF using VLM (multimodal-looker subagent) and merge into a single markdown document with sentence continuity fixes. Use when extracting text from PDF textbooks for (1) Converting PDF pages to markdown, (2) Batch OCR processing a page range, (3) Extracting textbook content with footnotes and tables, (4) Processing academic books with headers, footnotes, and diagrams, (5) Merging multiple OCR pages into one document with proper sentence flow.
 ---
 
 # Critical Thinking Chapter OCR

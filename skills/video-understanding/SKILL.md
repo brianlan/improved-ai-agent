@@ -1,6 +1,6 @@
 ---
 name: video-understanding
-description: Automatically analyze, transcribe, and summarize video content from Bilibili, YouTube, and other platforms. Converts video to text using ASR (speech-to-text) with LAN/Bailian fallback, and extracts text from video frames via OCR when requested. Trigger phrases: video analysis, video transcription, video summary, extract text from video, video OCR, Bilibili, YouTube, video to text, speech to text, ASR, transcribe video, understand video content, video frame text extraction
+description: Automatically analyze, transcribe, and summarize video content from Bilibili, YouTube, and other platforms. Converts video to text using ASR (speech-to-text) with LAN/Bailian fallback, and extracts text from video frames via OCR when requested. Trigger phrases -> video analysis, video transcription, video summary, extract text from video, video OCR, Bilibili, YouTube, video to text, speech to text, ASR, transcribe video, understand video content, video frame text extraction
 ---
 
 # Video Understanding Skill

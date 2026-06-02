@@ -1,6 +1,6 @@
 ---
 name: critical-thinking-fix-page
-description: Fix or insert a specific page in an OCR'd merged markdown document by re-processing with customized OCR rules. Use after critical-thinking-chapter-ocr to correct problematic pages or add missing pages. Takes the merged .md file, source PDF, page number N, custom OCR rules, and operation type (fix/insert) as input. Re-OCR pages N-1, N, N+1 with the target page using special rules, then surgically replace or insert content in the merged document. Use when: (1) A specific page has OCR errors, (2) Tables or special layouts were incorrectly extracted, (3) Content needs re-extraction with different rules, (4) A page is missing from the merged document, (5) Fixing issues identified during review of critical-thinking-chapter-ocr output.
+description: Fix or insert a specific page in an OCR'd merged markdown document by re-processing with customized OCR rules. Use after critical-thinking-chapter-ocr to correct problematic pages or add missing pages. Takes the merged .md file, source PDF, page number N, custom OCR rules, and operation type (fix/insert) as input. Re-OCR pages N-1, N, N+1 with the target page using special rules, then surgically replace or insert content in the merged document. Use when (1) A specific page has OCR errors, (2) Tables or special layouts were incorrectly extracted, (3) Content needs re-extraction with different rules, (4) A page is missing from the merged document, (5) Fixing issues identified during review of critical-thinking-chapter-ocr output.
 ---
 
 # Critical Thinking Fix Page
