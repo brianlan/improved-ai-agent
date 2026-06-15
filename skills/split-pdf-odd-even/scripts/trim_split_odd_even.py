@@ -12,6 +12,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+# Global to persist bootstrapped path
+_bootstrapped_dir: tempfile.TemporaryDirectory | None = None
+
 
 def die(message: str, code: int = 1) -> None:
     print(f"ERROR: {message}", file=sys.stderr)
@@ -34,8 +37,12 @@ def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     return result
 
 
-def page_count_with_pdfinfo(pdf_path: Path) -> int:
-    result = run([require_tool("pdfinfo"), str(pdf_path)])
+def page_count_with_pdfinfo(pdf_path: Path, password: str = "") -> int:
+    cmd = [require_tool("pdfinfo")]
+    if password:
+        cmd.extend(["-upw", password])
+    cmd.append(str(pdf_path))
+    result = run(cmd)
     match = re.search(r"^Pages:\s+(\d+)\s*$", result.stdout, re.MULTILINE)
     if not match:
         die(f"Could not determine page count for {pdf_path}")
@@ -69,11 +76,13 @@ def parse_page_range(value: str | None, total_pages: int) -> tuple[int, int]:
     return start, end
 
 
-def output_path(input_pdf: Path, suffix: str, overwrite: bool) -> Path:
-    path = input_pdf.with_name(f"{input_pdf.stem}_{suffix}{input_pdf.suffix}")
+def output_path(input_pdf: Path, suffix: str) -> Path:
+    return input_pdf.with_name(f"{input_pdf.stem}_{suffix}{input_pdf.suffix}")
+
+
+def check_overwrite(path: Path, overwrite: bool) -> None:
     if path.exists() and not overwrite:
         die(f"Output already exists: {path}. Re-run with --overwrite to replace it.")
-    return path
 
 
 def validate_input(input_pdf: Path) -> None:
@@ -83,20 +92,51 @@ def validate_input(input_pdf: Path) -> None:
         die(f"Input path is not a file: {input_pdf}")
     if input_pdf.suffix.lower() != ".pdf":
         die(f"Input file must be a PDF: {input_pdf}")
+    if input_pdf.stat().st_size == 0:
+        die(f"Input PDF file is empty (0 bytes): {input_pdf}")
+
+
+def bootstrap_pypdf() -> bool:
+    global _bootstrapped_dir
+    if _bootstrapped_dir is not None:
+        return importlib.util.find_spec("pypdf") is not None
+    try:
+        print("Installing python package 'pypdf' in a temporary directory...", file=sys.stderr)
+        tmpdir = tempfile.TemporaryDirectory(prefix="pypdf_bootstrap_")
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "pypdf", "--target", tmpdir.name],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            _bootstrapped_dir = tmpdir
+            sys.path.insert(0, _bootstrapped_dir.name)
+            return importlib.util.find_spec("pypdf") is not None
+    except Exception as e:
+        print(f"Warning: Failed to bootstrap pypdf: {e}", file=sys.stderr)
+    return False
 
 
 def pypdf_available() -> bool:
     return importlib.util.find_spec("pypdf") is not None
 
 
-def split_with_pypdf(input_pdf: Path, page_range: str | None, parity_basis: str, overwrite: bool) -> tuple[Path | None, Path | None]:
+def split_with_pypdf(input_pdf: Path, page_range: str | None, parity_basis: str, overwrite: bool, password: str = "") -> tuple[Path | None, Path | None]:
     from pypdf import PdfReader, PdfWriter
 
     reader = PdfReader(input_pdf)
+    if reader.is_encrypted:
+        if not password:
+            die("PDF is encrypted. Please provide a password using --password.")
+        try:
+            reader.decrypt(password)
+        except Exception as e:
+            die(f"Failed to decrypt PDF: {e}")
+
     total_pages = len(reader.pages)
     start, end = parse_page_range(page_range, total_pages)
-    odd_output = output_path(input_pdf, "odd", overwrite)
-    even_output = output_path(input_pdf, "even", overwrite)
+    odd_output = output_path(input_pdf, "odd")
+    even_output = output_path(input_pdf, "even")
 
     odd_writer = PdfWriter()
     even_writer = PdfWriter()
@@ -104,6 +144,11 @@ def split_with_pypdf(input_pdf: Path, page_range: str | None, parity_basis: str,
         parity_number = source_page if parity_basis == "source" else source_page - start + 1
         writer = odd_writer if parity_number % 2 == 1 else even_writer
         writer.add_page(reader.pages[source_page - 1])
+
+    if len(odd_writer.pages) > 0:
+        check_overwrite(odd_output, overwrite)
+    if len(even_writer.pages) > 0:
+        check_overwrite(even_output, overwrite)
 
     written: list[Path | None] = []
     for output, writer in ((odd_output, odd_writer), (even_output, even_writer)):
@@ -113,6 +158,8 @@ def split_with_pypdf(input_pdf: Path, page_range: str | None, parity_basis: str,
             continue
         if output.exists() and overwrite:
             output.unlink()
+        if reader.metadata:
+            writer.add_metadata(reader.metadata)
         with output.open("wb") as handle:
             writer.write(handle)
         print(f"Wrote {output} ({len(writer.pages)} pages)")
@@ -127,24 +174,32 @@ def unite_or_report(pdfunite: str, pages: list[Path], output: Path, overwrite: b
         return False
     if output.exists() and overwrite:
         output.unlink()
-    run([pdfunite, *[str(page) for page in pages], str(output)])
+    if len(pages) == 1:
+        shutil.copy(pages[0], output)
+    else:
+        run([pdfunite, *[str(page) for page in pages], str(output)])
     print(f"Wrote {output} ({len(pages)} pages)")
     return True
 
 
-def split_with_poppler(input_pdf: Path, page_range: str | None, parity_basis: str, overwrite: bool) -> tuple[Path | None, Path | None]:
+def split_with_poppler(input_pdf: Path, page_range: str | None, parity_basis: str, overwrite: bool, password: str = "") -> tuple[Path | None, Path | None]:
     pdfseparate = require_tool("pdfseparate")
     pdfunite = require_tool("pdfunite")
 
-    total_pages = page_count_with_pdfinfo(input_pdf)
+    total_pages = page_count_with_pdfinfo(input_pdf, password)
     start, end = parse_page_range(page_range, total_pages)
-    odd_output = output_path(input_pdf, "odd", overwrite)
-    even_output = output_path(input_pdf, "even", overwrite)
+    odd_output = output_path(input_pdf, "odd")
+    even_output = output_path(input_pdf, "even")
 
     with tempfile.TemporaryDirectory(prefix="trim_split_odd_even_") as tmp:
         tmpdir = Path(tmp)
         page_pattern = tmpdir / "page-%06d.pdf"
-        run([pdfseparate, "-f", str(start), "-l", str(end), str(input_pdf), str(page_pattern)])
+        
+        cmd = [pdfseparate]
+        if password:
+            cmd.extend(["-upw", password])
+        cmd.extend(["-f", str(start), "-l", str(end), str(input_pdf), str(page_pattern)])
+        run(cmd)
 
         odd_pages: list[Path] = []
         even_pages: list[Path] = []
@@ -158,24 +213,40 @@ def split_with_poppler(input_pdf: Path, page_range: str | None, parity_basis: st
             else:
                 even_pages.append(page_file)
 
+        if odd_pages:
+            check_overwrite(odd_output, overwrite)
+        if even_pages:
+            check_overwrite(even_output, overwrite)
+
         wrote_odd = unite_or_report(pdfunite, odd_pages, odd_output, overwrite)
         wrote_even = unite_or_report(pdfunite, even_pages, even_output, overwrite)
 
     return odd_output if wrote_odd else None, even_output if wrote_even else None
 
 
-def split_pdf(input_pdf: Path, page_range: str | None, parity_basis: str, overwrite: bool, backend: str) -> tuple[Path | None, Path | None]:
+def split_pdf(input_pdf: Path, page_range: str | None, parity_basis: str, overwrite: bool, backend: str, password: str = "") -> tuple[Path | None, Path | None]:
     validate_input(input_pdf)
 
     has_pypdf = pypdf_available()
     if backend == "pypdf" and not has_pypdf:
-        die("Python package 'pypdf' is not installed. Install it or use --backend poppler.")
+        if bootstrap_pypdf():
+            has_pypdf = True
+        else:
+            die("Python package 'pypdf' is not installed and bootstrapping failed. Install it or use --backend poppler.")
+
+    if backend == "auto" and not has_pypdf:
+        # Check if poppler tools are missing. If so, attempt to bootstrap pypdf.
+        poppler_missing = not shutil.which("pdfseparate") or not shutil.which("pdfunite")
+        if poppler_missing:
+            if bootstrap_pypdf():
+                has_pypdf = True
+
     if backend == "pypdf" or (backend == "auto" and has_pypdf):
-        return split_with_pypdf(input_pdf, page_range, parity_basis, overwrite)
+        return split_with_pypdf(input_pdf, page_range, parity_basis, overwrite, password)
 
     if backend == "auto":
         print("Python package 'pypdf' is not installed; falling back to Poppler tools.", file=sys.stderr)
-    return split_with_poppler(input_pdf, page_range, parity_basis, overwrite)
+    return split_with_poppler(input_pdf, page_range, parity_basis, overwrite, password)
 
 
 def main() -> None:
@@ -202,9 +273,21 @@ def main() -> None:
         help="PDF processing backend. auto prefers pypdf and falls back to Poppler tools.",
     )
     parser.add_argument("--overwrite", action="store_true", help="Replace existing *_odd.pdf and *_even.pdf files")
+    parser.add_argument(
+        "--password",
+        default="",
+        help="Password for encrypted PDFs",
+    )
     args = parser.parse_args()
 
-    split_pdf(args.pdf.expanduser().resolve(), args.page_range, args.parity_basis, args.overwrite, args.backend)
+    split_pdf(
+        args.pdf.expanduser().resolve(),
+        args.page_range,
+        args.parity_basis,
+        args.overwrite,
+        args.backend,
+        args.password,
+    )
 
 
 if __name__ == "__main__":

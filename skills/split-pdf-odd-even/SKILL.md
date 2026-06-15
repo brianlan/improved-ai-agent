@@ -13,8 +13,8 @@ Use the bundled script for deterministic PDF page extraction and splitting.
 2. Run one of:
 
 ```bash
-python3 /Users/rlan/projects/improved-ai-agent/skills/split-pdf-odd-even/scripts/trim_split_odd_even.py "/path/to/input.pdf"
-python3 /Users/rlan/projects/improved-ai-agent/skills/split-pdf-odd-even/scripts/trim_split_odd_even.py "/path/to/input.pdf" "START-END"
+python3 ./skills/split-pdf-odd-even/scripts/trim_split_odd_even.py "/path/to/input.pdf"
+python3 ./skills/split-pdf-odd-even/scripts/trim_split_odd_even.py "/path/to/input.pdf" "START-END"
 ```
 
 3. Report the generated files:
