@@ -1,0 +1,47 @@
+{
+  "id": "T1",
+  "title": "Extract request validation from OrderService.createOrder",
+  "summary": "Separate order request validation from persistence while preserving public API behavior and existing error responses.",
+  "evidence": [
+    "OrderService.createOrder performs validation, normalization, authorization checks, and persistence in one control flow.",
+    "Invalid-order behavior is hard to test independently from database writes."
+  ],
+  "likely_files": [
+    "src/order/OrderService.ts",
+    "src/order/validation.ts",
+    "tests/order/OrderService.test.ts"
+  ],
+  "supporting_roles": [
+    "code-smell",
+    "testability",
+    "roi"
+  ],
+  "objections": [
+    {
+      "role": "safety",
+      "objection": "Validation extraction may alter error codes or message ordering.",
+      "resolved": true
+    },
+    {
+      "role": "architecture",
+      "objection": "Do not move validation into a shared utility outside the order domain.",
+      "resolved": true
+    }
+  ],
+  "consensus_level": "B",
+  "safety_veto": false,
+  "constraints": [
+    "Preserve public API response shape.",
+    "Preserve existing error codes and messages.",
+    "Keep validation inside the order domain boundary.",
+    "Do not change persistence or authorization logic."
+  ],
+  "verification": [
+    "Add characterization tests for invalid-order behavior before refactoring.",
+    "Run existing order service tests.",
+    "Add unit tests for extracted validation logic after behavior is locked."
+  ],
+  "risk": "medium",
+  "status": "accepted_with_constraints"
+}
+

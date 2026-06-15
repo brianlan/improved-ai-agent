@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/refactoring-agents/final-plan.schema.json",
+  "title": "Refactoring Council Final Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "goal",
+    "scope",
+    "non_goals",
+    "current_problems",
+    "strategy",
+    "tasks",
+    "rollback_strategy",
+    "open_questions",
+    "rejected_or_postponed_ideas"
+  ],
+  "properties": {
+    "goal": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "non_goals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "current_problems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "strategy": {
+      "type": "string"
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "why",
+          "scope",
+          "likely_files",
+          "safety_constraints",
+          "verification",
+          "risk",
+          "dependencies"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^P[0-9]+$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "why": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scope": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "likely_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "safety_constraints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verification": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risk": {
+            "enum": ["low", "medium", "high"]
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "rollback_strategy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rejected_or_postponed_ideas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["idea", "reason"],
+        "properties": {
+          "idea": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+
