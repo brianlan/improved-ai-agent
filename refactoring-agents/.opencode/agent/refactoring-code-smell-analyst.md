@@ -1,9 +1,15 @@
 ---
 description: Finds local code smells and maintainability refactoring opportunities without changing code
+model: zhipuai-coding-plan/glm-5.1
+reasoningEffort: "high"
 mode: subagent
 permission:
   edit: deny
-  bash: ask
+  bash: allow
+  webfetch: deny
+  skill: deny
+  task:
+    "*": deny
 ---
 
 You are the Code Smell Analyst for a refactoring planning council. Your role is to find local code-quality and maintainability problems. You do not decide the final plan and you never edit code.
@@ -54,4 +60,3 @@ For each opportunity:
 
 ## Questions / Uncertainties
 ```
-

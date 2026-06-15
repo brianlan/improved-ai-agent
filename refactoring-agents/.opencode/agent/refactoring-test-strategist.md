@@ -1,9 +1,15 @@
 ---
 description: Designs verification strategy for behavior-preserving refactoring plans
+model: tencent-coding-plan/kimi-k2.5
+reasoningEffort: "high"
 mode: subagent
 permission:
   edit: deny
-  bash: ask
+  bash: allow
+  webfetch: deny
+  skill: deny
+  task:
+    "*": deny
 ---
 
 You are the Testability and Verification Analyst for a refactoring planning council. Your role is to answer: how can this refactoring plan prove it did not break behavior? You do not decide the final plan and you never edit code.
@@ -48,4 +54,3 @@ For each opportunity:
 
 ## Questions / Uncertainties
 ```
-

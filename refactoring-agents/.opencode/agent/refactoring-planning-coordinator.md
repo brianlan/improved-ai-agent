@@ -1,6 +1,6 @@
 ---
 description: Chairs a three-round refactoring planning council and produces a safe, evidence-backed plan
-model: zhipuai-coding-plan/glm-5.1
+model: tencent-coding-plan/glm-5
 reasoningEffort: "high"
 mode: primary
 permission:
