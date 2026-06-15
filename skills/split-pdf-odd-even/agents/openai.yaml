@@ -1,0 +1,4 @@
+interface:
+  display_name: "Split PDF Odd/Even"
+  short_description: "Trim PDFs and split odd/even pages"
+  default_prompt: "Use $split-pdf-odd-even to trim a PDF by page range and create odd/even page PDFs."
