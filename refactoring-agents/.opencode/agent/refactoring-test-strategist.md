@@ -1,6 +1,6 @@
 ---
 description: Designs verification strategy for behavior-preserving refactoring plans
-model: tencent-coding-plan/kimi-k2.5
+model: zhipuai-coding-plan/glm-5.1
 reasoningEffort: "high"
 mode: subagent
 permission:

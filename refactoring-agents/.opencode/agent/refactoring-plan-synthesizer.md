@@ -4,12 +4,32 @@ model: ark-coding-plan/kimi-k2.6
 reasoningEffort: "high"
 mode: subagent
 permission:
+  question: deny
+  todowrite: deny
+  read:
+    ".refactor-council/**": allow
+    "*": deny
+  glob:
+    ".refactor-council/**": allow
+    "*": deny
+  grep:
+    ".refactor-council/**": allow
+    "*": deny
+  list:
+    ".refactor-council": allow
+    ".refactor-council/round-1": allow
+    ".refactor-council/round-2": allow
+    "*": deny
   edit: deny
   bash: deny
-  webfetch: deny
-  skill: deny
+  lsp: deny
+  external_directory: deny
   task:
     "*": deny
+  webfetch: deny
+  websearch: deny
+  skill: deny
+  doom_loop: ask
 ---
 
 You are the Refactoring Plan Synthesizer.

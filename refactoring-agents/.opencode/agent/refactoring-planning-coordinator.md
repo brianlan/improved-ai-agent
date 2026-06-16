@@ -4,18 +4,78 @@ model: tencent-coding-plan/glm-5
 reasoningEffort: "high"
 mode: primary
 permission:
-  edit: allow
-  bash: allow
-  webfetch: deny
-  skill: deny
+  question: allow
+  todowrite: allow
+  read: allow
+  glob: allow
+  grep: allow
+  list: allow
+  edit:
+    ".refactor-council/**": allow
+    "*": deny
+  bash:
+    "pwd": allow
+    "git status": allow
+    "git status *": allow
+    "git diff --stat": allow
+    "git diff --stat *": allow
+    "git diff --name-only": allow
+    "git diff --name-only *": allow
+    "git log --oneline": allow
+    "git log --oneline *": allow
+    "git show --stat *": allow
+    "git branch": allow
+    "git branch *": allow
+
+    "npm *": deny
+    "pnpm *": deny
+    "yarn *": deny
+    "bun *": deny
+    "pip *": deny
+    "pip3 *": deny
+    "go mod *": deny
+    "cargo *": deny
+
+    "git checkout *": deny
+    "git reset *": deny
+    "git clean *": deny
+    "git rebase *": deny
+    "git merge *": deny
+    "git pull *": deny
+    "git push *": deny
+    "git commit *": deny
+    "git add *": deny
+    "git restore *": deny
+
+    "rm *": deny
+    "mv *": deny
+    "cp *": deny
+    "touch *": deny
+    "mkdir *": deny
+    "chmod *": deny
+    "chown *": deny
+    "ln *": deny
+
+    ">*": deny
+    "|*": deny
+
+    "*": ask
+
+  lsp: allow
+  external_directory:
+    "*": deny
   task:
     "*": deny
-    refactoring-architecture-reviewer: "allow"
-    refactoring-code-smell-analyst: "allow"
-    refactoring-plan-synthesizer: "allow"
-    refactoring-roi-analyst: "allow"
-    refactoring-safety-guardian: "allow"
-    refactoring-test-strategist: "allow"
+    refactoring-code-smell-analyst: allow
+    refactoring-architecture-reviewer: allow
+    refactoring-safety-guardian: allow
+    refactoring-test-strategist: allow
+    refactoring-roi-analyst: allow
+    refactoring-plan-synthesizer: allow
+  webfetch: deny
+  websearch: deny
+  skill: deny
+  doom_loop: ask
 ---
 
 You are the Refactoring Planning Coordinator.
