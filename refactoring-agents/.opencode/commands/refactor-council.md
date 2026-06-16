@@ -1,5 +1,5 @@
 ---
-description: Run a human-in-the-loop small/medium refactoring council workflow
+description: Run a human-in-the-loop, risk-aware refactoring council workflow
 agent: refactoring-planning-coordinator
 ---
 
@@ -11,7 +11,7 @@ User request:
 
 ```text
 $ARGUMENTS
-```
+````
 
 # Refactoring Council Protocol
 
@@ -30,67 +30,150 @@ The council is designed for cases where a single-agent plan may miss:
 * missing verification,
 * unclear design choices,
 * unsafe sequencing,
-* unspoken human preferences.
+* unspoken human preferences,
+* larger but worthwhile refactoring directions.
 
 ## Scope of This Council
 
-This council is optimized for **small and medium behavior-preserving refactoring plans**.
+The council supports:
 
-It is suitable for:
+* small conservative refactoring,
+* medium module-level refactoring,
+* feature-area refactoring,
+* multi-PR modular refactoring,
+* human-approved risk-aware refactoring directions,
+* behavior-preserving phased migrations inside a bounded module or feature area.
 
-* focused file-level refactoring,
-* small module refactoring,
-* medium feature-area cleanup,
-* decomposition of oversized functions/classes/services,
-* module-local responsibility cleanup,
-* dependency-direction cleanup inside a focused area,
-* incremental extraction of pure logic,
-* testability improvements,
-* safe multi-PR refactoring sequences.
+The council does not support:
 
-It is not intended to produce implementation plans for:
+* whole-system architecture redesign,
+* multi-team platform strategy,
+* broad product strategy,
+* rewrites without incremental migration,
+* refactoring plans that require behavior changes as a hidden dependency,
+* unbounded “clean up the whole codebase” efforts.
 
-* whole-repository refactoring,
-* large architecture redesign,
-* cross-system rewrites,
-* long-running migration programs,
-* replacement of core architectural patterns,
-* broad package restructuring across unrelated areas,
-* refactoring that requires large-scale team coordination.
+A larger refactoring direction must not be rejected merely because it is larger than one PR.
 
-The council must not turn a large architecture redesign idea into implementation tasks in this workflow.
+A larger refactoring direction must be rejected, postponed, or escalated only when:
 
-However, the council should not ignore large refactoring insights. If it discovers larger architecture problems, it must preserve them as:
+* evidence is weak,
+* the value is unclear,
+* the behavior boundary is unclear,
+* architecture direction is unjustified,
+* verification is not feasible,
+* rollback is not feasible,
+* the scope is strategic/system-wide rather than modular,
+* the human declines the risk or investment.
+
+## Planning Posture
+
+The council supports two planning postures.
+
+### Conservative Incremental Posture
+
+This is the default posture.
+
+Use it when:
+
+* the user asks for normal refactoring,
+* the scope is small,
+* risk tolerance is unclear,
+* public behavior is sensitive,
+* the council lacks enough evidence for a larger direction.
+
+This posture prefers:
+
+* small focused PRs,
+* Level A tasks,
+* conservative Level B tasks,
+* behavior-preserving changes,
+* minimal architecture movement,
+* strong verification before movement.
+
+### Risk-Aware Modular Posture
+
+Use this posture when:
+
+* the user explicitly asks to consider medium or larger refactoring,
+* the council finds a larger direction with strong evidence and meaningful long-term value,
+* conservative cleanup would leave the core structural problem unsolved,
+* a module-level or feature-area boundary change appears justified,
+* the larger direction can be phased into safe milestones,
+* the human approves the risk-aware direction.
+
+Risk-Aware Modular Posture does not mean reckless refactoring.
+
+It means the council may surface a larger refactoring direction, explain its value, cost, risk, migration path, and verification requirements, then ask the human whether to approve it.
+
+In this posture:
+
+* large directions are represented as `Refactoring Direction` entries, not direct implementation tasks,
+* approved directions must be decomposed into milestones,
+* milestones must be decomposed into focused implementation tasks,
+* each task must still preserve behavior and have verification,
+* Safety Guardian veto rules still apply,
+* human approval is required before a larger direction can shape the final plan.
+
+## Direction vs Task
+
+The council must distinguish between `Refactoring Direction` and `Implementation Task`.
+
+### Refactoring Direction
+
+A Refactoring Direction is a larger design or module-level path.
+
+Examples:
+
+* Restructure validation flow inside a module.
+* Split a large service into domain-local components.
+* Introduce a module-local facade to simplify call sites.
+* Gradually migrate duplicated logic behind a single internal interface.
+* Reorganize feature-area boundaries to reduce dependency inversion problems.
+
+A Refactoring Direction:
+
+* may span multiple PRs,
+* may require multiple milestones,
+* may be too large for one task,
+* may require human approval,
+* must include value, risk, migration, verification, and rollback discussion,
+* must not be implemented as one broad task.
+
+Use IDs:
 
 ```text
-Future RFC Candidates
+R-001, R-002, R-003, ...
 ```
 
-or under:
+### Implementation Task
+
+An Implementation Task is a focused, executable step.
+
+Examples:
+
+* Add characterization tests for current validation behavior.
+* Extract pure validation helper inside the existing module.
+* Route one call path through the new module-local facade.
+* Migrate one group of call sites.
+* Remove old internal helper after parity verification.
+
+An Implementation Task:
+
+* should be small enough for a focused PR,
+* must preserve behavior,
+* must have acceptance criteria,
+* must have verification,
+* must have a do-not-do list,
+* must have rollback notes.
+
+Use IDs:
 
 ```text
-Rejected or Postponed Ideas
+T-001, T-002, T-003, ...
 ```
 
-Large ideas should be described clearly, with evidence and rationale, but they must not become Level A or Level B implementation tasks in this council run.
-
-## Complexity Budget
-
-Default complexity budget for this council:
-
-* Prefer one focused file, module, or feature area.
-* Prefer 2–5 implementation tasks.
-* Each implementation task should fit into one focused PR.
-* A medium plan may contain a sequence of focused PRs.
-* Avoid plans that require broad repository-wide coordination.
-* Avoid plans that require many unrelated modules to change together.
-* Avoid long-running migration programs.
-
-If the plan appears to require more than 5–7 implementation tasks, the coordinator must either:
-
-1. ask the human to narrow the scope,
-2. split the work into multiple council runs,
-3. classify part of the work as future RFC / postponed work.
+A larger Refactoring Direction can be approved, but only Level A or Level B implementation tasks may enter the executable final plan.
 
 ## Interaction Mode
 
@@ -182,13 +265,13 @@ If an agent is unavailable, the coordinator must explicitly state which role is 
 8. Do not produce a final plan until:
 
    * independent specialist analysis is complete,
-   * candidate topics have stable IDs,
+   * candidate topics and directions have stable IDs,
    * material objections have been processed,
    * safety vetoes have been handled,
    * all triggered human decision gates have been answered,
+   * larger directions have been approved, rejected, or postponed,
    * accepted tasks have concrete verification requirements,
-   * rejected or postponed ideas are preserved,
-   * larger architecture ideas have been moved to Future RFC Candidates or Rejected/Postponed Ideas.
+   * rejected or postponed ideas are preserved.
 
 In Automatic Mode only, Human Decision Gates may be resolved with conservative defaults, and every default must be recorded.
 
@@ -209,6 +292,7 @@ Create or provide these artifacts:
     roi.md
   round-2/
     candidate-topics.md
+    refactoring-directions.md
     objections.md
     revised-topics.md
     consensus.md
@@ -272,19 +356,19 @@ Do you have any preferences?
 Good question:
 
 ```text
-Decision D-001: Refactoring scope
+Decision D-001: Planning posture
 
-The council found both low-risk local cleanup opportunities and broader architecture concerns.
+The council found both conservative cleanup topics and a larger module-level refactoring direction.
 
-Which scope should the council use for this run?
+Which planning posture should the council use?
 
-A. Only high-value local cleanup inside the target module.
-B. Local cleanup plus small architecture-boundary improvements in directly related files.
-C. Stop and let me narrow the target files manually.
-D. Record broader architecture concerns as future RFC candidates, but do not include them as implementation tasks.
+A. Conservative only: include high-value low-risk cleanup.
+B. Risk-aware modular: include the larger direction as a human-approved refactoring direction, then split it into milestones.
+C. Compare both options in the final plan.
+D. Stop and let me narrow the scope.
 
 Council recommendation: B.
-Reason: It balances useful cleanup with controlled risk.
+Reason: The larger direction appears to address the root structural issue while still allowing phased, behavior-preserving implementation.
 ```
 
 After invoking the `question` tool, stop. Resume only after receiving the human's answer.
@@ -302,14 +386,15 @@ In Automatic Mode, the coordinator may use conservative defaults and must record
 A Human Decision Gate is mandatory when a decision materially affects:
 
 * refactoring scope,
+* planning posture,
 * risk tolerance,
 * design direction,
 * public behavior preservation,
 * architecture boundary choices,
-* whether to include or exclude candidate topics,
+* whether to include or exclude larger refactoring directions,
+* whether to approve a Risk-Aware Modular direction,
 * whether to accept a Level B task with constraints,
 * whether to postpone unresolved Level C topics,
-* whether to record a large design issue as a Future RFC Candidate,
 * whether to produce issue-ready tasks.
 
 A Human Decision Gate is optional only when the decision does not materially change the plan.
@@ -344,7 +429,7 @@ Mode: Interactive / Automatic
 
 ## Round 0: Intake and Context Collection
 
-Goal: understand the request, target scope, repository context, constraints, and likely verification commands.
+Goal: understand the request, target scope, repository context, constraints, likely verification commands, and planning posture.
 
 The coordinator should inspect the repository with read-only commands when useful.
 
@@ -358,6 +443,8 @@ Write `.refactor-council/input.md` with:
 ## Target Scope
 
 ## Inferred Goal
+
+## Planning Posture
 
 ## Non-Goals
 
@@ -383,19 +470,22 @@ Write `.refactor-council/context.md` with:
 
 ## Public Contracts / Behavior-Sensitive Areas
 
+## Larger Direction Signals
+
 ## Likely Verification Commands
 
 ## Unknowns
 ```
 
-### Human Gate 0: Scope, Intent, and Risk Preference
+### Human Gate 0: Scope, Intent, Risk Preference, and Planning Posture
 
 Trigger this gate before Round 1 if any of these are unclear and materially affect the plan:
 
-* target file, module, or focused feature area,
+* target scope,
 * main refactoring goal,
 * maximum acceptable risk,
-* preference for very small PRs versus a medium multi-PR sequence,
+* preference for small incremental PRs versus larger modular refactoring,
+* whether Risk-Aware Modular Posture is allowed,
 * behavior that must not change.
 
 In Interactive Mode, ask with the `question` tool and stop.
@@ -405,26 +495,22 @@ In Automatic Mode, use conservative defaults and record them.
 Possible questions:
 
 ```text
-1. What is the target scope: file, small module, focused feature area, or directly related call sites?
-2. What is the main goal: readability, testability, architecture-boundary cleanup, reducing duplication, or preparing for a near-term feature?
-3. What is the maximum acceptable risk level for this council run?
-4. Should the council prefer very small PRs, or allow a medium-sized sequence of focused PRs?
+1. What is the target scope: file, module, feature area, or whole repository?
+2. What is the main goal: readability, testability, architecture cleanup, reducing duplication, or preparing for future features?
+3. What is the maximum acceptable risk level?
+4. Should the council prefer small incremental PRs, or may it consider a larger module-level refactoring direction?
 5. Are there public APIs, error messages, data formats, performance behavior, or undocumented behaviors that must not change?
 ```
-
-Whole-repository refactoring is out of scope for this council run.
-
-If whole-repository or large architecture issues are discovered, record them as Future RFC Candidates rather than implementation tasks.
 
 If Automatic Mode is active and safe defaults are needed, use:
 
 ```text
+- Use Conservative Incremental Posture.
 - Prefer small incremental PRs.
 - Preserve all external behavior.
 - Do not change public APIs, error messages, data formats, storage semantics, authorization, or performance-sensitive behavior.
 - Treat unclear behavior as behavior to preserve.
 - Prefer Level A and conservative Level B tasks.
-- Keep large architecture redesign ideas as Future RFC Candidates, not implementation tasks.
 ```
 
 ## Round 1: Independent Specialist Analysis
@@ -437,12 +523,12 @@ Each specialist prompt must include:
 
 * original user request,
 * target scope,
+* planning posture,
 * relevant code/file context,
 * known constraints,
 * explicit instruction not to edit code,
 * explicit instruction to use read-only inspection only,
-* instruction to keep this council scoped to small/medium behavior-preserving refactoring,
-* instruction to record larger architecture ideas as Future RFC Candidates rather than implementation tasks,
+* instruction to distinguish local tasks from larger directions,
 * required Round 1 output format.
 
 Persist each result:
@@ -470,15 +556,19 @@ For each opportunity:
 - Likely files:
 - Risk:
 - Confidence:
+- May indicate larger direction: yes/no
 
-## Future RFC Candidates
+## Possible Larger Refactoring Directions
 
-For each larger idea that is valuable but out of scope for this council:
-- Idea:
+For each direction:
+- Direction:
 - Evidence:
-- Why it is larger than this council run:
-- Potential future benefit:
-- Why it should not become an implementation task now:
+- Why conservative cleanup may be insufficient:
+- Potential value:
+- Potential risk:
+- Phasing possibility:
+- Human decision needed: yes/no:
+- Confidence:
 
 ## Risks
 
@@ -505,14 +595,20 @@ For each idea:
 ## Questions / Uncertainties
 ```
 
-## Human Gate 1: Candidate Topic Selection
+## Human Gate 1: Candidate Topic and Direction Selection
 
-After Round 1, the coordinator aggregates findings into candidate topics.
+After Round 1, the coordinator aggregates findings into candidate topics and possible refactoring directions.
 
-Each topic must have a stable ID:
+Each implementation-sized topic must have a stable ID:
 
 ```text
 T-001, T-002, T-003, ...
+```
+
+Each larger direction must have a stable ID:
+
+```text
+R-001, R-002, R-003, ...
 ```
 
 Write `.refactor-council/round-2/candidate-topics.md`.
@@ -534,70 +630,95 @@ Verification requirements:
 Risk:
 Open questions:
 Human decision needed: yes/no
-Future RFC candidate: yes/no
+Related direction: R-xxx / none
 ```
 
-Do not include Future RFC Candidates as implementation candidate topics unless the human explicitly asks to start a separate strategic planning process.
+Write `.refactor-council/round-2/refactoring-directions.md`.
+
+Refactoring direction schema:
+
+```text
+## Direction R-001: <short name>
+
+Source agents:
+Problem:
+Evidence:
+Why conservative cleanup may be insufficient:
+Proposed direction:
+Scope boundary:
+Out-of-scope:
+Expected value:
+Do-nothing cost:
+Architecture impact:
+Safety concerns:
+Verification strategy:
+Phasing / milestones:
+Rollback strategy:
+Estimated implementation shape:
+Risk:
+Human decision needed: yes/no
+Council preliminary recommendation:
+```
 
 Trigger Human Gate 1 after Round 1 and before Round 2 if:
 
 * more than 5 candidate topics are found,
 * candidate topics span multiple modules,
 * candidate topics mix low-risk cleanup with higher-risk architecture changes,
-* the council found both narrow and broad possible plans,
+* one or more larger refactoring directions are found,
+* the council found both narrow and broader possible plans,
 * the target scope may be larger than the user intended,
-* one or more specialists raised questions that materially affect topic selection,
-* the plan appears likely to exceed the default complexity budget.
+* one or more specialists raised questions that materially affect topic or direction selection.
 
-In Interactive Mode, ask the human which topics should enter Round 2 using the `question` tool and stop.
+In Interactive Mode, ask the human which topics and directions should enter Round 2 using the `question` tool and stop.
 
 Suggested options:
 
 ```text
-A. Include only high-value / low-risk topics.
-B. Include high-value topics up to medium risk if verification is concrete.
-C. Include a specific list of topic IDs.
-D. Narrow the scope and run this council only on one focused area.
-E. Record broader architecture ideas as Future RFC Candidates only.
+A. Conservative only: include only high-value / low-risk implementation topics.
+B. Risk-aware modular: include the larger direction as a candidate direction and require phased review.
+C. Compare conservative and risk-aware options before final planning.
+D. Include a specific list of topic IDs and direction IDs.
+E. Stop and let me narrow the scope manually.
 ```
 
 In Automatic Mode, default to:
 
 ```text
-Focus on high-value / low-risk topics and conservative medium-risk topics with clear verification. Move large architecture ideas to Future RFC Candidates.
+Focus on high-value / low-risk topics and conservative medium-risk topics with clear verification. Do not approve larger directions automatically.
 ```
 
 Record the decision or default in `.refactor-council/human-decisions.md`.
 
 ## Round 2A: Cross-Review and Objections
 
-Goal: make specialists challenge the candidate topics from their role.
+Goal: make specialists challenge candidate topics and candidate directions from their role.
 
-Ask each specialist to review the candidate list.
+Ask each specialist to review the candidate list and direction list.
 
 Round 2 review output:
 
 ```text
 ## Supported Topics
 
+## Supported Directions
+
 ## Topics Accepted With Constraints
+
+## Directions Acceptable With Constraints
 
 ## Material Objections
 
 For each objection:
-- Topic ID:
+- ID:
 - Objection:
 - Why it matters:
 - Required change to resolve:
 - If unresolved, recommended classification:
 
-## Future RFC Candidates
-
-For each larger idea:
-- Topic or idea ID:
-- Why this should be future RFC, not implementation work now:
-
 ## Rejected or Postponed Topics
+
+## Rejected or Postponed Directions
 
 ## Required Verification Changes
 
@@ -612,7 +733,7 @@ Persist all challenges and objections in:
 
 ## Safety Veto Rule
 
-The Safety Guardian may veto a topic when there is concrete unresolved risk to:
+The Safety Guardian may veto a topic or direction when there is concrete unresolved risk to:
 
 * behavior,
 * public contracts,
@@ -631,7 +752,7 @@ Veto format:
 
 ```text
 Veto: yes
-Topic:
+ID:
 Reason:
 Required changes to reconsider:
 Minimum verification:
@@ -639,83 +760,68 @@ Minimum verification:
 
 Rules:
 
-1. A vetoed topic cannot be Level A or Level B.
-2. A vetoed topic can only re-enter the plan after being narrowed or constrained and re-reviewed by Safety Guardian.
-3. If re-review is not completed, classify the topic as Level C or Level D.
+1. A vetoed implementation topic cannot be Level A or Level B.
+2. A vetoed refactoring direction cannot be approved.
+3. A vetoed item can only re-enter the plan after being narrowed or constrained and re-reviewed by Safety Guardian.
+4. If re-review is not completed, classify the item as unresolved, rejected, or postponed.
+
+The Safety Guardian must not veto solely because an item is medium-sized or multi-step. Veto unresolved risk, not size.
 
 ## Material Objection Rule
 
 If Architecture Reviewer, ROI Analyst, or Test Strategist raises a material objection, the coordinator must do one of:
 
-1. revise the topic and request targeted re-review,
-2. classify the topic as Level C or Level D,
-3. escalate the topic to Human Gate 2.
+1. revise the topic or direction and request targeted re-review,
+2. classify it as unresolved, rejected, or postponed,
+3. escalate it to Human Gate 2.
 
 Do not silently ignore material objections.
 
-## Large Redesign Handling Rule
+## Round 2B: Topic / Direction Revision and Targeted Re-Review
 
-If any specialist identifies a topic as a large architecture redesign, whole-repository refactor, cross-system rewrite, or long-running migration program, the coordinator must not classify it as Level A or Level B in this council run.
+Goal: transform debated topics and directions into safer, narrower, more executable proposals.
 
-The coordinator must classify it as one of:
-
-```text
-Level C: Future RFC candidate
-Level D: Rejected for this council run
-```
-
-The coordinator should preserve:
-
-* evidence,
-* why it matters,
-* potential future benefit,
-* why it is out of scope now,
-* what would need to be true before reconsidering it.
-
-## Round 2B: Topic Revision and Targeted Re-Review
-
-Goal: transform debated topics into safer, narrower, more executable topics.
-
-For each topic with a material objection:
+For each item with material objections:
 
 1. summarize the objection,
-2. narrow or constrain the topic,
-3. write a revised topic,
+2. narrow or constrain the topic/direction,
+3. write a revised topic/direction,
 4. request targeted re-review from the objecting specialist,
 5. request Safety Guardian re-review if behavior-sensitive.
 
 Write `.refactor-council/round-2/revised-topics.md`.
 
-Revised topic schema:
+Revised item schema:
 
 ```text
-## Revised Topic T-001
+## Revised Item <T-001 or R-001>
 
-Original topic:
+Original item:
 Objections:
 Revision:
 New constraints:
 Updated verification:
+Updated phasing, if direction:
 Remaining concerns:
 Re-review result:
 ```
 
-A revised topic must remain within the small/medium council scope. If narrowing is not possible, classify it as Future RFC or postponed.
+## Human Gate 2: Design Choices, Risk-Aware Directions, and Tradeoffs
 
-## Human Gate 2: Design Choices and Tradeoffs
-
-After Round 2A/2B, ask the human when there are unresolved design choices that materially affect the final plan.
+After Round 2A/2B, ask the human when there are unresolved design choices or larger refactoring directions that materially affect the final plan.
 
 Trigger this gate after Round 2A/2B and before final consensus if:
 
-* a material architecture objection has multiple valid small/medium resolutions,
-* Safety Guardian allows a topic only under meaningful constraints,
+* a larger direction is plausible but requires human approval,
+* a material architecture objection has multiple valid resolutions,
+* Safety Guardian allows a topic or direction only under meaningful constraints,
+* ROI Analyst recommends a larger direction that requires investment,
 * ROI Analyst recommends postponing a topic that another agent considers important,
-* the council must choose between local helper, module-local abstraction, or existing boundary-preserving location,
-* the council must choose between very small PRs and a medium multi-PR sequence,
+* the council must choose between conservative cleanup and risk-aware modular refactoring,
+* the council must choose between local helper, module-local abstraction, or shared utility,
+* the council must choose between smaller PRs and a larger coherent refactor,
 * a Level B topic depends on human risk tolerance,
-* two or more specialists disagree and more than one reasonable small/medium path remains,
-* the council needs human confirmation to move a larger idea to Future RFC Candidates.
+* two or more specialists disagree and more than one reasonable path remains.
 
 In Interactive Mode, ask the human to choose among explicit options using the `question` tool and stop.
 
@@ -741,28 +847,87 @@ Option B:
 - Risk:
 - Verification impact:
 
+Option C, if useful:
+- Description:
+- Pros:
+- Cons:
+- Risk:
+- Verification impact:
+
 Council recommendation:
 Consequence if unanswered:
+```
+
+For larger directions, ask explicitly:
+
+```text
+Should the council treat R-xxx as an approved refactoring direction?
+
+A. No. Keep only conservative tasks.
+B. Yes, but require phased migration and characterization tests first.
+C. Yes, and allow medium-risk milestones if rollback is clear.
+D. Postpone R-xxx as future work.
 ```
 
 In Automatic Mode, use the most conservative option that:
 
 * preserves behavior,
 * minimizes architecture disruption,
-* keeps the task small,
+* keeps tasks small,
 * avoids new abstractions unless clearly justified,
 * has concrete verification,
-* moves large redesign ideas to Future RFC Candidates rather than implementation work.
+* does not automatically approve larger directions.
 
 Record the decision or default in `.refactor-council/human-decisions.md`.
 
 ## Round 3: Consensus Classification
 
-Goal: classify each topic into a stable decision.
+Goal: classify each direction and task into a stable decision.
 
 Write `.refactor-council/round-2/consensus.md`.
 
-Classification levels:
+### Direction Classification
+
+For each `R-xxx`, classify as:
+
+```text
+Direction Accepted by Human
+- Human explicitly approved the direction.
+- Safety vetoes are cleared.
+- Architecture concerns are addressed or constrained.
+- Verification strategy is concrete enough to phase.
+- Direction is modular/feature-area scoped, not strategic/system-wide.
+
+Direction Accepted with Constraints
+- Human approved the direction with explicit constraints.
+- Some objections remain but are manageable through phasing, verification, and scope control.
+- The direction may shape milestones, but only Level A/B tasks may become implementation work.
+
+Direction Needs More Investigation
+- Direction may be valuable but lacks evidence, design clarity, verification path, or human approval.
+
+Direction Rejected / Postponed
+- Direction is unsafe, too broad, too strategic, too low-value, not modular, or declined by the human.
+```
+
+Direction consensus schema:
+
+```text
+## Direction R-001: <short name>
+
+Classification:
+Reason:
+Human decision:
+Accepted constraints:
+Required phasing:
+Required verification:
+Risk:
+Rejected alternatives:
+```
+
+### Task Classification
+
+For each `T-xxx`, classify as:
 
 ```text
 Level A: Accepted
@@ -771,7 +936,6 @@ Level A: Accepted
 - Verification path is concrete.
 - Scope is narrow enough for one focused PR.
 - ROI is medium or high.
-- The topic is within small/medium council scope.
 
 Level B: Accepted with constraints
 - No active safety veto.
@@ -779,59 +943,54 @@ Level B: Accepted with constraints
 - Human decision is resolved.
 - Verification path is concrete.
 - Risk is acceptable.
-- The topic is within small/medium council scope.
 
-Level C: Unresolved / future work / Future RFC candidate
+Level C: Unresolved / future work
 - Useful idea but has unresolved design choice, missing evidence, unclear owner, unclear verification, or unanswered human decision.
-- Larger architecture ideas belong here when they may be valuable but exceed this council's scope.
 
 Level D: Rejected
-- Unsafe, too broad, too low-value, behavior-changing, architecture-inconsistent, speculative, not a refactoring, or too large for this council run.
+- Unsafe, too broad as a task, too low-value, behavior-changing, architecture-inconsistent, speculative, or not a refactoring.
 ```
 
 In Interactive Mode, do not classify a topic as Level B if it depends on an unanswered human decision.
 
-Consensus entry schema:
+Task consensus schema:
 
 ```text
 ## Topic T-001: <short name>
 
 Classification:
 Reason:
+Related direction:
 Accepted constraints:
 Required verification:
 Risk:
 Dependencies:
 Human decisions:
 Rejected alternatives:
-Future RFC notes:
 ```
 
 ## Human Gate 3: Final Plan Approval
 
 Trigger this gate before invoking `refactoring-plan-synthesizer` if:
 
+* any direction is accepted,
 * any Level B task remains,
 * any open question could affect implementation,
-* the final plan would contain more than 5 implementation tasks,
+* the final plan would contain more than 3 implementation tasks,
 * the highest risk level is medium or higher,
 * the user requested review before finalization,
-* the council made a non-trivial scope or design decision during consensus,
-* there is a Future RFC Candidate that the human may want to keep visible in the final plan.
+* the council made a non-trivial scope, posture, or design decision during consensus.
 
-Do not trigger Gate 3 merely because a small low-risk plan has 1–3 Level A tasks with concrete verification and no material objections.
-
-In Interactive Mode, ask whether to finalize, make the plan more conservative, narrow scope, or produce issue-ready specs.
+In Interactive Mode, ask whether to finalize, make the plan more conservative, make it more ambitious, or convert accepted tasks into issue-ready specs.
 
 Suggested options:
 
 ```text
 A. Finalize this plan.
 B. Make the plan more conservative.
-C. Narrow the plan to fewer implementation tasks.
+C. Make the plan more ambitious within the approved modular scope.
 D. Produce only the final plan, not issue-ready tasks.
 E. Produce both final plan and issue-ready tasks.
-F. Keep Future RFC Candidates visible in the final plan.
 ```
 
 Use the `question` tool and stop after asking.
@@ -841,7 +1000,7 @@ Do not invoke the synthesizer until the human answers.
 In Automatic Mode, default to:
 
 ```text
-Finalize the conservative plan, produce issue-ready tasks, and keep Future RFC Candidates visible but out of implementation tasks.
+Finalize the conservative plan and produce issue-ready tasks. Do not include unapproved larger directions.
 ```
 
 Record the decision or default in `.refactor-council/human-decisions.md`.
@@ -854,22 +1013,29 @@ Invoke `refactoring-plan-synthesizer` with only:
 * `.refactor-council/input.md`,
 * `.refactor-council/context.md`,
 * Round 1 summaries,
-* Round 2 candidate topics,
+* candidate topics,
+* refactoring directions,
 * objections,
 * revised topics,
 * consensus,
 * human decisions,
-* Future RFC Candidates,
 * rejected or postponed ideas.
 
 The synthesizer must not invent new implementation tasks.
+
+The synthesizer may include an approved larger direction only if it is classified as:
+
+* Direction Accepted by Human,
+* Direction Accepted with Constraints.
 
 The synthesizer may only include implementation tasks that were classified as:
 
 * Level A,
 * Level B.
 
-The synthesizer must not include Level C or Level D topics as implementation tasks. Mention them under open questions, Future RFC Candidates, or rejected/postponed ideas.
+The synthesizer must not include Level C or Level D topics as implementation tasks.
+
+The synthesizer must not include rejected, postponed, or unapproved directions as active plan directions. Mention them under open questions or rejected/postponed ideas.
 
 Write:
 
@@ -884,13 +1050,29 @@ Final plan required structure:
 
 ## 1. Refactoring Goal
 
-## 2. Scope and Non-Goals
+## 2. Planning Posture
 
-## 3. Current Problems
+## 3. Scope and Non-Goals
 
-## 4. Agreed Refactoring Strategy
+## 4. Current Problems
 
-## 5. Step-by-Step Task Breakdown
+## 5. Approved Refactoring Direction, if any
+
+## 6. Agreed Refactoring Strategy
+
+## 7. Phased Milestones
+
+For each milestone:
+### Milestone N: <specific milestone>
+
+Goal:
+Scope:
+Exit criteria:
+Verification:
+Risk:
+Dependencies:
+
+## 8. Step-by-Step Task Breakdown
 
 For each task:
 ### Task N: <specific action>
@@ -908,22 +1090,21 @@ Verification:
 Verification commands:
 Risk:
 Dependencies:
+Related direction / milestone:
 
-## 6. Dependencies Between Tasks
+## 9. Dependencies Between Tasks
 
-## 7. Risk Summary
+## 10. Risk Summary
 
-## 8. Required Tests / Verification
+## 11. Required Tests / Verification
 
-## 9. Rollback Strategy
+## 12. Rollback Strategy
 
-## 10. Open Questions
+## 13. Open Questions
 
-## 11. Future RFC Candidates
+## 14. Rejected or Postponed Ideas
 
-## 12. Rejected or Postponed Ideas
-
-## 13. Human Decisions Applied
+## 15. Human Decisions Applied
 ```
 
 ## Issue-Ready Tasks
@@ -968,9 +1149,9 @@ Issue task schema:
 ## Risk
 
 ## Rollback Notes
-```
 
-Do not create issue-ready tasks for Future RFC Candidates. They are not implementation tasks in this council run.
+## Related Direction / Milestone
+```
 
 ## Final Response Rule
 
@@ -997,10 +1178,11 @@ If the workflow completes, return a concise summary:
 ```text
 Final plan: .refactor-council/final-plan.md
 Issue-ready tasks: .refactor-council/issue-ready-tasks.md
+Planning posture:
+Approved directions:
 Accepted task count:
 Highest risk level:
 Verification categories:
-Future RFC candidate count:
 Rejected/postponed idea count:
 Unresolved blockers:
 Human decisions used:
