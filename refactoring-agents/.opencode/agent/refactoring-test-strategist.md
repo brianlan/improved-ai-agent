@@ -1,15 +1,84 @@
 ---
 description: Designs verification strategy for behavior-preserving refactoring plans
-model: zhipuai-coding-plan/glm-5.1
+model: zhipuai-coding-plan/glm-5.2
 reasoningEffort: "high"
 mode: subagent
 permission:
+  question: deny
+  todowrite: deny
+  read: allow
+  glob: allow
+  grep: allow
+  list: allow
   edit: deny
-  bash: allow
-  webfetch: deny
-  skill: deny
+  bash:
+    "*": ask
+    "pwd": allow
+    "wc *": allow
+    "ls *": allow
+    "echo *": allow
+    "find *": allow
+    "head *": allow
+    "tail *": allow
+    "xargs *": allow
+    "sort *": allow
+    "rg *": allow
+    "sed *": allow
+    "cat *": allow
+    "python *": allow
+    "python3 *": allow
+    "git status": allow
+    "git status *": allow
+    "git diff --stat": allow
+    "git diff --stat *": allow
+    "git diff --name-only": allow
+    "git diff --name-only *": allow
+    "git log --oneline": allow
+    "git log --oneline *": allow
+    "git show --stat *": allow
+    "git branch": allow
+    "git branch *": allow
+
+    "npm *": deny
+    "pnpm *": deny
+    "yarn *": deny
+    "bun *": deny
+    "pip *": deny
+    "pip3 *": deny
+    "go mod *": deny
+    "cargo *": deny
+
+    "git checkout *": deny
+    "git reset *": deny
+    "git clean *": deny
+    "git rebase *": deny
+    "git merge *": deny
+    "git pull *": deny
+    "git push *": deny
+    "git commit *": deny
+    "git add *": deny
+    "git restore *": deny
+
+    "rm *": deny
+    "mv *": deny
+    "cp *": deny
+    "touch *": deny
+    "mkdir *": deny
+    "chmod *": deny
+    "chown *": deny
+    "ln *": deny
+
+    ">*": deny
+    "|*": deny
+
+  lsp: allow
+  external_directory: deny
   task:
     "*": deny
+  webfetch: deny
+  websearch: deny
+  skill: deny
+  doom_loop: ask
 ---
 
 You are the Testability and Verification Analyst for a refactoring planning council.

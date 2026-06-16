@@ -12,8 +12,21 @@ permission:
   list: allow
   edit: deny
   bash:
+    "*": ask
     "pwd": allow
-
+    "wc *": allow
+    "ls *": allow
+    "echo *": allow
+    "find *": allow
+    "head *": allow
+    "tail *": allow
+    "xargs *": allow
+    "sort *": allow
+    "rg *": allow
+    "sed *": allow
+    "cat *": allow
+    "python *": allow
+    "python3 *": allow
     "git status": allow
     "git status *": allow
     "git diff --stat": allow
@@ -57,8 +70,6 @@ permission:
 
     ">*": deny
     "|*": deny
-
-    "*": deny
 
   lsp: allow
   external_directory: deny

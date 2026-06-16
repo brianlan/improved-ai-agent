@@ -11,10 +11,24 @@ permission:
   grep: allow
   list: allow
   edit:
-    ".refactor-council/**": allow
     "*": deny
+    ".refactor-council/**": allow
   bash:
+    "*": ask
     "pwd": allow
+    "wc *": allow
+    "ls *": allow
+    "echo *": allow
+    "find *": allow
+    "head *": allow
+    "tail *": allow
+    "xargs *": allow
+    "sort *": allow
+    "rg *": allow
+    "sed *": allow
+    "cat *": allow
+    "python *": allow
+    "python3 *": allow
     "git status": allow
     "git status *": allow
     "git diff --stat": allow
@@ -58,8 +72,6 @@ permission:
 
     ">*": deny
     "|*": deny
-
-    "*": ask
 
   lsp: allow
   external_directory:
