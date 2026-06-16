@@ -25,8 +25,11 @@ permission:
     "rg *": allow
     "sed *": allow
     "cat *": allow
+    "grep *": allow
+    "awk *": allow
     "python *": allow
     "python3 *": allow
+    "git -C *": allow
     "git status": allow
     "git status *": allow
     "git diff --stat": allow

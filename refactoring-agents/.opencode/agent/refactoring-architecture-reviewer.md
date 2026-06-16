@@ -1,6 +1,6 @@
 ---
 description: Reviews refactoring candidates for architecture fit, boundaries, dependency direction, modular evolution, and abstraction risk
-model: opencode-go/kimi-k2.7-code
+model: zhipuai-coding-plan/glm-5.2
 reasoningEffort: "high"
 mode: subagent
 permission:
@@ -25,8 +25,11 @@ permission:
     "rg *": allow
     "sed *": allow
     "cat *": allow
+    "grep *": allow
+    "awk *": allow
     "python *": allow
     "python3 *": allow
+    "git -C *": allow
     "git status": allow
     "git status *": allow
     "git diff --stat": allow

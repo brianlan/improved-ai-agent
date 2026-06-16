@@ -11,7 +11,7 @@ User request:
 
 ```text
 $ARGUMENTS
-````
+```
 
 # Refactoring Council Protocol
 
@@ -23,48 +23,50 @@ The council does not edit product code. It studies the repository, debates refac
 
 The council is designed for cases where a single-agent plan may miss:
 
-* architecture risks,
-* behavior regressions,
-* low-value cleanup,
-* overengineering,
-* missing verification,
-* unclear design choices,
-* unsafe sequencing,
-* unspoken human preferences,
-* larger but worthwhile refactoring directions.
+- architecture risks,
+- behavior regressions,
+- low-value cleanup,
+- overengineering,
+- missing verification,
+- unclear design choices,
+- unsafe sequencing,
+- unspoken human preferences,
+- larger but worthwhile refactoring directions,
+- insufficiently challenged proposals,
+- approved directions that are not represented as executable work.
 
 ## Scope of This Council
 
 The council supports:
 
-* small conservative refactoring,
-* medium module-level refactoring,
-* feature-area refactoring,
-* multi-PR modular refactoring,
-* human-approved risk-aware refactoring directions,
-* behavior-preserving phased migrations inside a bounded module or feature area.
+- small conservative refactoring,
+- medium module-level refactoring,
+- feature-area refactoring,
+- multi-PR modular refactoring,
+- human-approved risk-aware refactoring directions,
+- behavior-preserving phased migrations inside a bounded module or feature area.
 
 The council does not support:
 
-* whole-system architecture redesign,
-* multi-team platform strategy,
-* broad product strategy,
-* rewrites without incremental migration,
-* refactoring plans that require behavior changes as a hidden dependency,
-* unbounded “clean up the whole codebase” efforts.
+- whole-system architecture redesign,
+- multi-team platform strategy,
+- broad product strategy,
+- rewrites without incremental migration,
+- refactoring plans that require behavior changes as a hidden dependency,
+- unbounded “clean up the whole codebase” efforts.
 
 A larger refactoring direction must not be rejected merely because it is larger than one PR.
 
 A larger refactoring direction must be rejected, postponed, or escalated only when:
 
-* evidence is weak,
-* the value is unclear,
-* the behavior boundary is unclear,
-* architecture direction is unjustified,
-* verification is not feasible,
-* rollback is not feasible,
-* the scope is strategic/system-wide rather than modular,
-* the human declines the risk or investment.
+- evidence is weak,
+- the value is unclear,
+- the behavior boundary is unclear,
+- architecture direction is unjustified,
+- verification is not feasible,
+- rollback is not feasible,
+- the scope is strategic/system-wide rather than modular,
+- the human declines the risk or investment.
 
 ## Planning Posture
 
@@ -76,31 +78,31 @@ This is the default posture.
 
 Use it when:
 
-* the user asks for normal refactoring,
-* the scope is small,
-* risk tolerance is unclear,
-* public behavior is sensitive,
-* the council lacks enough evidence for a larger direction.
+- the user asks for normal refactoring,
+- the scope is small,
+- risk tolerance is unclear,
+- public behavior is sensitive,
+- the council lacks enough evidence for a larger direction.
 
 This posture prefers:
 
-* small focused PRs,
-* Level A tasks,
-* conservative Level B tasks,
-* behavior-preserving changes,
-* minimal architecture movement,
-* strong verification before movement.
+- small focused PRs,
+- Level A tasks,
+- conservative Level B tasks,
+- behavior-preserving changes,
+- minimal architecture movement,
+- strong verification before movement.
 
 ### Risk-Aware Modular Posture
 
 Use this posture when:
 
-* the user explicitly asks to consider medium or larger refactoring,
-* the council finds a larger direction with strong evidence and meaningful long-term value,
-* conservative cleanup would leave the core structural problem unsolved,
-* a module-level or feature-area boundary change appears justified,
-* the larger direction can be phased into safe milestones,
-* the human approves the risk-aware direction.
+- the user explicitly asks to consider medium or larger refactoring,
+- the council finds a larger direction with strong evidence and meaningful long-term value,
+- conservative cleanup would leave the core structural problem unsolved,
+- a module-level or feature-area boundary change appears justified,
+- the larger direction can be phased into safe milestones,
+- the human approves the risk-aware direction.
 
 Risk-Aware Modular Posture does not mean reckless refactoring.
 
@@ -108,12 +110,12 @@ It means the council may surface a larger refactoring direction, explain its val
 
 In this posture:
 
-* large directions are represented as `Refactoring Direction` entries, not direct implementation tasks,
-* approved directions must be decomposed into milestones,
-* milestones must be decomposed into focused implementation tasks,
-* each task must still preserve behavior and have verification,
-* Safety Guardian veto rules still apply,
-* human approval is required before a larger direction can shape the final plan.
+- large directions are represented as `Refactoring Direction` entries, not direct implementation tasks,
+- approved directions must be decomposed into milestones,
+- milestones must be decomposed into focused implementation tasks,
+- each task must still preserve behavior and have verification,
+- Safety Guardian veto rules still apply,
+- human approval is required before a larger direction can shape the final plan.
 
 ## Direction vs Task
 
@@ -125,20 +127,20 @@ A Refactoring Direction is a larger design or module-level path.
 
 Examples:
 
-* Restructure validation flow inside a module.
-* Split a large service into domain-local components.
-* Introduce a module-local facade to simplify call sites.
-* Gradually migrate duplicated logic behind a single internal interface.
-* Reorganize feature-area boundaries to reduce dependency inversion problems.
+- Restructure validation flow inside a module.
+- Split a large service into domain-local components.
+- Introduce a module-local facade to simplify call sites.
+- Gradually migrate duplicated logic behind a single internal interface.
+- Reorganize feature-area boundaries to reduce dependency direction problems.
 
 A Refactoring Direction:
 
-* may span multiple PRs,
-* may require multiple milestones,
-* may be too large for one task,
-* may require human approval,
-* must include value, risk, migration, verification, and rollback discussion,
-* must not be implemented as one broad task.
+- may span multiple PRs,
+- may require multiple milestones,
+- may be too large for one task,
+- may require human approval,
+- must include value, risk, migration, verification, and rollback discussion,
+- must not be implemented as one broad task.
 
 Use IDs:
 
@@ -152,20 +154,20 @@ An Implementation Task is a focused, executable step.
 
 Examples:
 
-* Add characterization tests for current validation behavior.
-* Extract pure validation helper inside the existing module.
-* Route one call path through the new module-local facade.
-* Migrate one group of call sites.
-* Remove old internal helper after parity verification.
+- Add characterization tests for current validation behavior.
+- Extract pure validation helper inside the existing module.
+- Route one call path through the new module-local facade.
+- Migrate one group of call sites.
+- Remove old internal helper after parity verification.
 
 An Implementation Task:
 
-* should be small enough for a focused PR,
-* must preserve behavior,
-* must have acceptance criteria,
-* must have verification,
-* must have a do-not-do list,
-* must have rollback notes.
+- should be small enough for a focused PR,
+- must preserve behavior,
+- must have acceptance criteria,
+- must have verification,
+- must have a do-not-do list,
+- must have rollback notes.
 
 Use IDs:
 
@@ -174,6 +176,56 @@ T-001, T-002, T-003, ...
 ```
 
 A larger Refactoring Direction can be approved, but only Level A or Level B implementation tasks may enter the executable final plan.
+
+## Approved Direction Coverage Rule
+
+Every approved direction must be represented by executable work.
+
+If a direction is classified as:
+
+- `Direction Accepted by Human`, or
+- `Direction Accepted with Constraints`,
+
+then the final plan must include at least one of the following:
+
+1. one or more Level A/B implementation tasks that directly implement the first milestone of the direction,
+2. one or more Level A/B enabler tasks that explicitly unblock the direction,
+3. a dedicated investigation/spike issue if implementation is not yet safe.
+
+An approved direction must not appear only as descriptive text.
+
+If a direction is approved but has no executable task, the coordinator must do one of:
+
+- create an explicit first-milestone task,
+- create an investigation/spike task,
+- downgrade the direction to `Needs More Investigation`,
+- ask the human whether to postpone the direction.
+
+The synthesizer must fail its self-check if an approved direction has no corresponding issue-ready task.
+
+## Direction Status Precision Rule
+
+The council must distinguish:
+
+```text
+Approved direction
+Approved direction with constraints
+Postponed direction
+Rejected direction
+Approved limited enabling task toward a postponed direction
+```
+
+Do not label a task as “R-xxx step” if R-xxx itself is postponed.
+
+Instead write:
+
+```text
+Related postponed direction: R-xxx
+Approved limited enabling task: T-yyy
+This task does not approve the full direction.
+```
+
+This avoids accidentally treating a postponed larger direction as approved.
 
 ## Interaction Mode
 
@@ -209,12 +261,12 @@ Human decisions are not time-limited unless the user explicitly requests Automat
 
 Automatic Mode is allowed only when the user explicitly says one of:
 
-* `--auto`
-* `fully automatic`
-* `run automatically`
-* `do not ask me questions`
-* `use defaults`
-* `proceed without asking`
+- `--auto`
+- `fully automatic`
+- `run automatically`
+- `do not ask me questions`
+- `use defaults`
+- `proceed without asking`
 
 In Automatic Mode, the coordinator may use conservative defaults at Human Decision Gates, but it must record every default in `.refactor-council/human-decisions.md`.
 
@@ -244,12 +296,12 @@ If neither flag is included, use Interactive Mode.
 
 The coordinator must invoke these specialist agents unless one is unavailable:
 
-* `refactoring-code-smell-analyst`
-* `refactoring-architecture-reviewer`
-* `refactoring-safety-guardian`
-* `refactoring-test-strategist`
-* `refactoring-roi-analyst`
-* `refactoring-plan-synthesizer`
+- `refactoring-code-smell-analyst`
+- `refactoring-architecture-reviewer`
+- `refactoring-safety-guardian`
+- `refactoring-test-strategist`
+- `refactoring-roi-analyst`
+- `refactoring-plan-synthesizer`
 
 If an agent is unavailable, the coordinator must explicitly state which role is missing and preserve that role's concerns in its own checklist before continuing.
 
@@ -263,15 +315,17 @@ If an agent is unavailable, the coordinator must explicitly state which role is 
 6. In Interactive Mode, do not continue past a triggered Human Decision Gate until the human answers.
 7. In Interactive Mode, do not replace a Human Decision Gate with a default.
 8. Do not produce a final plan until:
-
-   * independent specialist analysis is complete,
-   * candidate topics and directions have stable IDs,
-   * material objections have been processed,
-   * safety vetoes have been handled,
-   * all triggered human decision gates have been answered,
-   * larger directions have been approved, rejected, or postponed,
-   * accepted tasks have concrete verification requirements,
-   * rejected or postponed ideas are preserved.
+   - independent specialist analysis is complete,
+   - candidate topics and directions have stable IDs,
+   - material objections have been processed,
+   - objection resolutions have been recorded,
+   - safety vetoes have been handled,
+   - all triggered human decision gates have been answered,
+   - larger directions have been approved, rejected, postponed, or downgraded,
+   - approved directions have executable task coverage,
+   - accepted tasks have concrete verification requirements,
+   - rejected or postponed ideas are preserved,
+   - artifact self-check passes.
 
 In Automatic Mode only, Human Decision Gates may be resolved with conservative defaults, and every default must be recorded.
 
@@ -294,10 +348,12 @@ Create or provide these artifacts:
     candidate-topics.md
     refactoring-directions.md
     objections.md
+    objection-resolution.md
     revised-topics.md
     consensus.md
   final-plan.md
   issue-ready-tasks.md
+  artifact-self-check.md
 ```
 
 If artifact writing is unavailable, provide the artifacts in the response with exact intended file paths.
@@ -347,30 +403,6 @@ Whether multiple options are allowed:
 
 The question should be specific and decision-oriented.
 
-Bad question:
-
-```text
-Do you have any preferences?
-```
-
-Good question:
-
-```text
-Decision D-001: Planning posture
-
-The council found both conservative cleanup topics and a larger module-level refactoring direction.
-
-Which planning posture should the council use?
-
-A. Conservative only: include high-value low-risk cleanup.
-B. Risk-aware modular: include the larger direction as a human-approved refactoring direction, then split it into milestones.
-C. Compare both options in the final plan.
-D. Stop and let me narrow the scope.
-
-Council recommendation: B.
-Reason: The larger direction appears to address the root structural issue while still allowing phased, behavior-preserving implementation.
-```
-
 After invoking the `question` tool, stop. Resume only after receiving the human's answer.
 
 ## Human Decision Gates
@@ -385,17 +417,18 @@ In Automatic Mode, the coordinator may use conservative defaults and must record
 
 A Human Decision Gate is mandatory when a decision materially affects:
 
-* refactoring scope,
-* planning posture,
-* risk tolerance,
-* design direction,
-* public behavior preservation,
-* architecture boundary choices,
-* whether to include or exclude larger refactoring directions,
-* whether to approve a Risk-Aware Modular direction,
-* whether to accept a Level B task with constraints,
-* whether to postpone unresolved Level C topics,
-* whether to produce issue-ready tasks.
+- refactoring scope,
+- planning posture,
+- risk tolerance,
+- design direction,
+- public behavior preservation,
+- architecture boundary choices,
+- whether to include or exclude larger refactoring directions,
+- whether to approve a Risk-Aware Modular direction,
+- whether an approved direction lacks executable task coverage,
+- whether to accept a Level B task with constraints,
+- whether to postpone unresolved Level C topics,
+- whether to produce issue-ready tasks.
 
 A Human Decision Gate is optional only when the decision does not materially change the plan.
 
@@ -481,25 +514,24 @@ Write `.refactor-council/context.md` with:
 
 Trigger this gate before Round 1 if any of these are unclear and materially affect the plan:
 
-* target scope,
-* main refactoring goal,
-* maximum acceptable risk,
-* preference for small incremental PRs versus larger modular refactoring,
-* whether Risk-Aware Modular Posture is allowed,
-* behavior that must not change.
+- target scope,
+- main refactoring goal,
+- maximum acceptable risk,
+- preference for small incremental PRs versus larger modular refactoring,
+- whether Risk-Aware Modular Posture is allowed,
+- behavior that must not change.
 
 In Interactive Mode, ask with the `question` tool and stop.
 
 In Automatic Mode, use conservative defaults and record them.
 
-Possible questions:
+Possible options:
 
 ```text
-1. What is the target scope: file, module, feature area, or whole repository?
-2. What is the main goal: readability, testability, architecture cleanup, reducing duplication, or preparing for future features?
-3. What is the maximum acceptable risk level?
-4. Should the council prefer small incremental PRs, or may it consider a larger module-level refactoring direction?
-5. Are there public APIs, error messages, data formats, performance behavior, or undocumented behaviors that must not change?
+A. Conservative only: analyze high-value low-risk cleanup.
+B. Risk-aware modular: allow larger module-level directions if evidence supports them.
+C. Compare conservative and risk-aware options.
+D. Stop and let me specify a narrower scope.
 ```
 
 If Automatic Mode is active and safe defaults are needed, use:
@@ -511,6 +543,7 @@ If Automatic Mode is active and safe defaults are needed, use:
 - Do not change public APIs, error messages, data formats, storage semantics, authorization, or performance-sensitive behavior.
 - Treat unclear behavior as behavior to preserve.
 - Prefer Level A and conservative Level B tasks.
+- Do not automatically approve larger refactoring directions.
 ```
 
 ## Round 1: Independent Specialist Analysis
@@ -521,15 +554,15 @@ Invoke each specialist independently. Do not include other specialists' conclusi
 
 Each specialist prompt must include:
 
-* original user request,
-* target scope,
-* planning posture,
-* relevant code/file context,
-* known constraints,
-* explicit instruction not to edit code,
-* explicit instruction to use read-only inspection only,
-* instruction to distinguish local tasks from larger directions,
-* required Round 1 output format.
+- original user request,
+- target scope,
+- planning posture,
+- relevant code/file context,
+- known constraints,
+- explicit instruction not to edit code,
+- explicit instruction to use read-only inspection only,
+- instruction to distinguish local tasks from larger directions,
+- required Round 1 output format.
 
 Persist each result:
 
@@ -567,7 +600,7 @@ For each direction:
 - Potential value:
 - Potential risk:
 - Phasing possibility:
-- Human decision needed: yes/no:
+- Human decision needed: yes/no
 - Confidence:
 
 ## Risks
@@ -655,6 +688,7 @@ Verification strategy:
 Phasing / milestones:
 Rollback strategy:
 Estimated implementation shape:
+Initial executable coverage:
 Risk:
 Human decision needed: yes/no
 Council preliminary recommendation:
@@ -662,13 +696,13 @@ Council preliminary recommendation:
 
 Trigger Human Gate 1 after Round 1 and before Round 2 if:
 
-* more than 5 candidate topics are found,
-* candidate topics span multiple modules,
-* candidate topics mix low-risk cleanup with higher-risk architecture changes,
-* one or more larger refactoring directions are found,
-* the council found both narrow and broader possible plans,
-* the target scope may be larger than the user intended,
-* one or more specialists raised questions that materially affect topic or direction selection.
+- more than 5 candidate topics are found,
+- candidate topics span multiple modules,
+- candidate topics mix low-risk cleanup with higher-risk architecture changes,
+- one or more larger refactoring directions are found,
+- the council found both narrow and broader possible plans,
+- the target scope may be larger than the user intended,
+- one or more specialists raised questions that materially affect topic or direction selection.
 
 In Interactive Mode, ask the human which topics and directions should enter Round 2 using the `question` tool and stop.
 
@@ -701,16 +735,40 @@ Round 2 review output:
 ```text
 ## Supported Topics
 
+For each topic:
+- ID:
+- Support reason:
+- Strongest condition for support:
+
 ## Supported Directions
+
+For each direction:
+- ID:
+- Support reason:
+- Strongest condition for support:
+- Required executable coverage:
 
 ## Topics Accepted With Constraints
 
+For each topic:
+- ID:
+- Constraints:
+- What would make this unacceptable:
+
 ## Directions Acceptable With Constraints
+
+For each direction:
+- ID:
+- Constraints:
+- Required milestone/task coverage:
+- What would make this unacceptable:
 
 ## Material Objections
 
 For each objection:
-- ID:
+- Objection ID:
+- Raised by:
+- Target ID:
 - Objection:
 - Why it matters:
 - Required change to resolve:
@@ -735,18 +793,18 @@ Persist all challenges and objections in:
 
 The Safety Guardian may veto a topic or direction when there is concrete unresolved risk to:
 
-* behavior,
-* public contracts,
-* data integrity,
-* performance-sensitive paths,
-* security,
-* authorization,
-* concurrency,
-* caching,
-* transactions,
-* migrations,
-* rollout safety,
-* rollback feasibility.
+- behavior,
+- public contracts,
+- data integrity,
+- performance-sensitive paths,
+- security,
+- authorization,
+- concurrency,
+- caching,
+- transactions,
+- migrations,
+- rollout safety,
+- rollback feasibility.
 
 Veto format:
 
@@ -777,17 +835,58 @@ If Architecture Reviewer, ROI Analyst, or Test Strategist raises a material obje
 
 Do not silently ignore material objections.
 
-## Round 2B: Topic / Direction Revision and Targeted Re-Review
+## Round 2B: Objection Resolution, Revision, and Targeted Re-Review
 
 Goal: transform debated topics and directions into safer, narrower, more executable proposals.
+
+The coordinator must write:
+
+```text
+.refactor-council/round-2/objection-resolution.md
+```
+
+Every material objection must have a resolution entry.
+
+Objection resolution schema:
+
+```text
+## Objection OBJ-001: <short name>
+
+Raised by:
+Target ID:
+Original proposal:
+Objection:
+Why it matters:
+Strongest supporting argument for original proposal:
+Coordinator response:
+Revision made:
+Re-review requested from:
+Re-review result:
+Human decision, if any:
+Final resolution:
+Final classification impact:
+```
+
+Resolution status must be one of:
+
+```text
+Resolved by revision
+Resolved by added constraint
+Resolved by human decision
+Not resolved — postponed
+Not resolved — rejected
+Not resolved — needs more investigation
+```
 
 For each item with material objections:
 
 1. summarize the objection,
-2. narrow or constrain the topic/direction,
-3. write a revised topic/direction,
-4. request targeted re-review from the objecting specialist,
-5. request Safety Guardian re-review if behavior-sensitive.
+2. identify the strongest supporting argument for the original proposal,
+3. narrow or constrain the topic/direction,
+4. write a revised topic/direction,
+5. request targeted re-review from the objecting specialist,
+6. request Safety Guardian re-review if behavior-sensitive,
+7. update the objection-resolution entry.
 
 Write `.refactor-council/round-2/revised-topics.md`.
 
@@ -798,13 +897,18 @@ Revised item schema:
 
 Original item:
 Objections:
+Strongest supporting argument:
 Revision:
 New constraints:
 Updated verification:
 Updated phasing, if direction:
+Updated executable coverage, if direction:
 Remaining concerns:
+Re-review requested from:
 Re-review result:
 ```
+
+Do not proceed to consensus until every material objection has an objection-resolution entry.
 
 ## Human Gate 2: Design Choices, Risk-Aware Directions, and Tradeoffs
 
@@ -812,51 +916,19 @@ After Round 2A/2B, ask the human when there are unresolved design choices or lar
 
 Trigger this gate after Round 2A/2B and before final consensus if:
 
-* a larger direction is plausible but requires human approval,
-* a material architecture objection has multiple valid resolutions,
-* Safety Guardian allows a topic or direction only under meaningful constraints,
-* ROI Analyst recommends a larger direction that requires investment,
-* ROI Analyst recommends postponing a topic that another agent considers important,
-* the council must choose between conservative cleanup and risk-aware modular refactoring,
-* the council must choose between local helper, module-local abstraction, or shared utility,
-* the council must choose between smaller PRs and a larger coherent refactor,
-* a Level B topic depends on human risk tolerance,
-* two or more specialists disagree and more than one reasonable path remains.
+- a larger direction is plausible but requires human approval,
+- an approved direction lacks executable coverage,
+- a material architecture objection has multiple valid resolutions,
+- Safety Guardian allows a topic or direction only under meaningful constraints,
+- ROI Analyst recommends a larger direction that requires investment,
+- ROI Analyst recommends postponing a topic that another agent considers important,
+- the council must choose between conservative cleanup and risk-aware modular refactoring,
+- the council must choose between local helper, module-local abstraction, or shared utility,
+- the council must choose between smaller PRs and a larger coherent refactor,
+- a Level B topic depends on human risk tolerance,
+- two or more specialists disagree and more than one reasonable path remains.
 
 In Interactive Mode, ask the human to choose among explicit options using the `question` tool and stop.
-
-Question format:
-
-```text
-## Decision D-001: <decision title>
-
-Context:
-Why this matters:
-
-Option A:
-- Description:
-- Pros:
-- Cons:
-- Risk:
-- Verification impact:
-
-Option B:
-- Description:
-- Pros:
-- Cons:
-- Risk:
-- Verification impact:
-
-Option C, if useful:
-- Description:
-- Pros:
-- Cons:
-- Risk:
-- Verification impact:
-
-Council recommendation:
-Consequence if unanswered:
-```
 
 For larger directions, ask explicitly:
 
@@ -867,16 +939,30 @@ A. No. Keep only conservative tasks.
 B. Yes, but require phased migration and characterization tests first.
 C. Yes, and allow medium-risk milestones if rollback is clear.
 D. Postpone R-xxx as future work.
+E. Approve only an investigation/spike issue, not implementation yet.
+```
+
+If an approved direction lacks executable coverage, ask:
+
+```text
+R-xxx is approved as a direction, but it currently has no executable Level A/B task.
+
+How should the council handle this?
+
+A. Add a first-milestone implementation task.
+B. Add an investigation/spike issue.
+C. Downgrade the direction to Needs More Investigation.
+D. Postpone the direction.
 ```
 
 In Automatic Mode, use the most conservative option that:
 
-* preserves behavior,
-* minimizes architecture disruption,
-* keeps tasks small,
-* avoids new abstractions unless clearly justified,
-* has concrete verification,
-* does not automatically approve larger directions.
+- preserves behavior,
+- minimizes architecture disruption,
+- keeps tasks small,
+- avoids new abstractions unless clearly justified,
+- has concrete verification,
+- does not automatically approve larger directions.
 
 Record the decision or default in `.refactor-council/human-decisions.md`.
 
@@ -897,17 +983,19 @@ Direction Accepted by Human
 - Architecture concerns are addressed or constrained.
 - Verification strategy is concrete enough to phase.
 - Direction is modular/feature-area scoped, not strategic/system-wide.
+- Direction has executable task coverage or an approved investigation/spike issue.
 
 Direction Accepted with Constraints
 - Human approved the direction with explicit constraints.
 - Some objections remain but are manageable through phasing, verification, and scope control.
 - The direction may shape milestones, but only Level A/B tasks may become implementation work.
+- Direction has executable task coverage or an approved investigation/spike issue.
 
 Direction Needs More Investigation
-- Direction may be valuable but lacks evidence, design clarity, verification path, or human approval.
+- Direction may be valuable but lacks evidence, design clarity, verification path, human approval, or executable task coverage.
 
 Direction Rejected / Postponed
-- Direction is unsafe, too broad, too strategic, too low-value, not modular, or declined by the human.
+- Direction is unsafe, too broad, too strategic, too low-value, not modular, declined by the human, or not represented by executable work.
 ```
 
 Direction consensus schema:
@@ -921,6 +1009,7 @@ Human decision:
 Accepted constraints:
 Required phasing:
 Required verification:
+Executable coverage:
 Risk:
 Rejected alternatives:
 ```
@@ -945,7 +1034,7 @@ Level B: Accepted with constraints
 - Risk is acceptable.
 
 Level C: Unresolved / future work
-- Useful idea but has unresolved design choice, missing evidence, unclear owner, unclear verification, or unanswered human decision.
+- Useful idea but has unresolved design choice, missing evidence, unclear owner, unclear verification, unanswered human decision, or missing direction coverage.
 
 Level D: Rejected
 - Unsafe, too broad as a task, too low-value, behavior-changing, architecture-inconsistent, speculative, or not a refactoring.
@@ -969,17 +1058,28 @@ Human decisions:
 Rejected alternatives:
 ```
 
+### Consensus Consistency Rules
+
+Before finalizing consensus:
+
+1. Count each listed item and make sure summary counts match actual entries.
+2. Do not include an ID in a summary if no detailed entry exists.
+3. Do not mark a direction as accepted if it lacks executable coverage.
+4. Do not mark a task as Level A/B if it has unresolved material objections.
+5. Do not mark a task as Level A/B if verification is vague.
+6. Preserve rejected and postponed ideas.
+
 ## Human Gate 3: Final Plan Approval
 
 Trigger this gate before invoking `refactoring-plan-synthesizer` if:
 
-* any direction is accepted,
-* any Level B task remains,
-* any open question could affect implementation,
-* the final plan would contain more than 3 implementation tasks,
-* the highest risk level is medium or higher,
-* the user requested review before finalization,
-* the council made a non-trivial scope, posture, or design decision during consensus.
+- any direction is accepted,
+- any Level B task remains,
+- any open question could affect implementation,
+- the final plan would contain more than 3 implementation tasks,
+- the highest risk level is medium or higher,
+- the user requested review before finalization,
+- the council made a non-trivial scope, posture, or design decision during consensus.
 
 In Interactive Mode, ask whether to finalize, make the plan more conservative, make it more ambitious, or convert accepted tasks into issue-ready specs.
 
@@ -1009,29 +1109,30 @@ Record the decision or default in `.refactor-council/human-decisions.md`.
 
 Invoke `refactoring-plan-synthesizer` with only:
 
-* original request,
-* `.refactor-council/input.md`,
-* `.refactor-council/context.md`,
-* Round 1 summaries,
-* candidate topics,
-* refactoring directions,
-* objections,
-* revised topics,
-* consensus,
-* human decisions,
-* rejected or postponed ideas.
+- original request,
+- `.refactor-council/input.md`,
+- `.refactor-council/context.md`,
+- Round 1 summaries,
+- candidate topics,
+- refactoring directions,
+- objections,
+- objection-resolution,
+- revised topics,
+- consensus,
+- human decisions,
+- rejected or postponed ideas.
 
 The synthesizer must not invent new implementation tasks.
 
 The synthesizer may include an approved larger direction only if it is classified as:
 
-* Direction Accepted by Human,
-* Direction Accepted with Constraints.
+- Direction Accepted by Human,
+- Direction Accepted with Constraints.
 
 The synthesizer may only include implementation tasks that were classified as:
 
-* Level A,
-* Level B.
+- Level A,
+- Level B.
 
 The synthesizer must not include Level C or Level D topics as implementation tasks.
 
@@ -1043,7 +1144,19 @@ Write:
 .refactor-council/final-plan.md
 ```
 
-Final plan required structure:
+Then create:
+
+```text
+.refactor-council/issue-ready-tasks.md
+```
+
+Then create:
+
+```text
+.refactor-council/artifact-self-check.md
+```
+
+## Final Plan Required Structure
 
 ```text
 # Refactoring Plan
@@ -1067,10 +1180,13 @@ For each milestone:
 
 Goal:
 Scope:
+Entry criteria:
 Exit criteria:
 Verification:
 Risk:
 Dependencies:
+Rollback / stop condition:
+Covered by issues:
 
 ## 8. Step-by-Step Task Breakdown
 
@@ -1088,6 +1204,7 @@ Do-not-do list:
 Acceptance criteria:
 Verification:
 Verification commands:
+Manual verification steps:
 Risk:
 Dependencies:
 Related direction / milestone:
@@ -1104,23 +1221,19 @@ Related direction / milestone:
 
 ## 14. Rejected or Postponed Ideas
 
-## 15. Human Decisions Applied
+## 15. Objection Resolution Summary
+
+## 16. Human Decisions Applied
 ```
 
 ## Issue-Ready Tasks
-
-After final plan synthesis, create:
-
-```text
-.refactor-council/issue-ready-tasks.md
-```
 
 Each issue-ready task should be independently copy-pastable into a GitHub issue.
 
 Issue task schema:
 
 ```text
-# Issue: <title>
+# Issue N: <T-xxx — title>
 
 ## Background
 
@@ -1144,6 +1257,8 @@ Issue task schema:
 
 ## Verification Commands
 
+## Manual Verification Steps
+
 ## Dependencies
 
 ## Risk
@@ -1152,6 +1267,75 @@ Issue task schema:
 
 ## Related Direction / Milestone
 ```
+
+### Issue Batching Rule
+
+`issue-ready-tasks.md` must include a batch summary before individual issues:
+
+```text
+# Issue Batch Summary
+
+## Batch 1: <name>
+Purpose:
+Issues:
+Why first:
+
+## Batch 2: <name>
+Purpose:
+Issues:
+Dependencies:
+```
+
+Every issue must belong to exactly one batch.
+
+## Artifact Self-Check
+
+Before final response, write `.refactor-council/artifact-self-check.md`.
+
+Required checks:
+
+```text
+# Artifact Self-Check
+
+## Markdown Integrity
+
+- [ ] Every fenced code block is closed.
+- [ ] No issue section is accidentally inside a code block.
+- [ ] No nested code fence breaks copy-paste rendering.
+- [ ] Tables render correctly.
+
+## Consensus Consistency
+
+- [ ] Consensus summary counts match actual detailed entries.
+- [ ] Every accepted direction has executable coverage.
+- [ ] Every Level A/B task appears in issue-ready tasks.
+- [ ] No Level C/D task appears as executable work.
+- [ ] No postponed direction is labeled as an approved direction.
+
+## Direction Coverage
+
+For each approved direction:
+- Direction ID:
+- Covered by issue(s):
+- Covered by milestone(s):
+- Coverage type: implementation / enabler / investigation
+
+## Verification Specificity
+
+- [ ] Every issue has verification commands or explicit reason commands are unavailable.
+- [ ] Every manual verification section has concrete steps and expected results.
+- [ ] Medium-risk tasks include rollback notes.
+- [ ] Behavior-sensitive tasks include characterization or parity verification.
+
+## Traceability
+
+- [ ] Every material objection appears in objection-resolution.md.
+- [ ] Every resolved objection links to revised topic/direction or human decision.
+- [ ] Every human decision used in final plan appears in human-decisions.md.
+- [ ] Rejected/postponed ideas are preserved.
+```
+
+If any check fails, fix the artifact before returning.
 
 ## Final Response Rule
 
@@ -1178,6 +1362,7 @@ If the workflow completes, return a concise summary:
 ```text
 Final plan: .refactor-council/final-plan.md
 Issue-ready tasks: .refactor-council/issue-ready-tasks.md
+Artifact self-check: .refactor-council/artifact-self-check.md
 Planning posture:
 Approved directions:
 Accepted task count:
