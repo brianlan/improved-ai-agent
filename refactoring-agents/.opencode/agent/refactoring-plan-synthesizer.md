@@ -7,20 +7,22 @@ permission:
   question: deny
   todowrite: deny
   read:
-    ".refactor-council/**": allow
     "*": deny
+    ".refactor-council/**": allow
   glob:
-    ".refactor-council/**": allow
     "*": deny
+    ".refactor-council/**": allow
   grep:
-    ".refactor-council/**": allow
     "*": deny
+    ".refactor-council/**": allow
   list:
+    "*": deny
     ".refactor-council": allow
     ".refactor-council/round-1": allow
     ".refactor-council/round-2": allow
+  edit:
     "*": deny
-  edit: deny
+    ".refactor-council/**": allow
   bash: deny
   lsp: deny
   external_directory: deny
