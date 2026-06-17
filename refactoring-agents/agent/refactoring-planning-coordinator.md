@@ -1,6 +1,6 @@
 ---
 description: Chairs a human-in-the-loop, risk-aware refactoring planning council and produces a safe, evidence-backed plan
-model: tencent-coding-plan/glm-5
+model: openai/gpt-5.5
 reasoningEffort: "high"
 mode: primary
 permission:
@@ -19,19 +19,25 @@ permission:
     "wc *": allow
     "ls *": allow
     "echo *": allow
+    "basename *": allow
+    "continue *": allow
     "find *": allow
     "head *": allow
     "tail *": allow
-    "xargs echo *": allow
+    "xargs *": allow
     "sort *": allow
     "rg *": allow
     "sed -n *": allow
     "cat *": allow
     "grep *": allow
     "awk *": allow
+    "python *": allow
+    "uv *": allow
+    "nvx *": allow
     "git -C *": allow
     "git status": allow
     "git status *": allow
+    "git ls-files *": allow
     "git diff --stat": allow
     "git diff --stat *": allow
     "git diff --name-only": allow

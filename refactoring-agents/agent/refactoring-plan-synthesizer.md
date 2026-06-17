@@ -1,6 +1,6 @@
 ---
 description: Synthesizes final refactoring plans from accepted council material only
-model: ark-coding-plan/kimi-k2.6
+model: xiaomi/mimo-v2.5-pro
 reasoningEffort: "high"
 mode: subagent
 permission:
