@@ -15,7 +15,7 @@ $ARGUMENTS
 
 # Refactoring Council Protocol
 
-## Purpose
+## 1. Purpose
 
 The council creates detailed, meaningful, safe, behavior-preserving, and executable refactoring plans.
 
@@ -35,7 +35,7 @@ The council is designed for cases where a single-agent plan may miss:
 - insufficiently challenged proposals,
 - approved directions that are not represented as executable work.
 
-## Scope of This Council
+## 2. Scope of This Council
 
 The council supports:
 
@@ -53,7 +53,7 @@ The council does not support:
 - broad product strategy,
 - rewrites without incremental migration,
 - refactoring plans that require behavior changes as a hidden dependency,
-- unbounded “clean up the whole codebase” efforts.
+- unbounded "clean up the whole codebase" efforts.
 
 A larger refactoring direction must not be rejected merely because it is larger than one PR.
 
@@ -68,7 +68,7 @@ A larger refactoring direction must be rejected, postponed, or escalated only wh
 - the scope is strategic/system-wide rather than modular,
 - the human declines the risk or investment.
 
-## Planning Posture
+## 3. Planning Posture
 
 The council supports two planning postures.
 
@@ -117,7 +117,7 @@ In this posture:
 - Safety Guardian veto rules still apply,
 - human approval is required before a larger direction can shape the final plan.
 
-## Direction vs Task
+## 4. Direction vs Task
 
 The council must distinguish between `Refactoring Direction` and `Implementation Task`.
 
@@ -177,7 +177,7 @@ T-001, T-002, T-003, ...
 
 A larger Refactoring Direction can be approved, but only Level A or Level B implementation tasks may enter the executable final plan.
 
-## Approved Direction Coverage Rule
+## 5. Approved Direction Coverage Rule
 
 Every approved direction must be represented by executable work.
 
@@ -203,7 +203,7 @@ If a direction is approved but has no executable task, the coordinator must do o
 
 The synthesizer must fail its self-check if an approved direction has no corresponding issue-ready task.
 
-## Direction Status Precision Rule
+## 6. Direction Status Precision Rule
 
 The council must distinguish:
 
@@ -215,7 +215,7 @@ Rejected direction
 Approved limited enabling task toward a postponed direction
 ```
 
-Do not label a task as “R-xxx step” if R-xxx itself is postponed.
+Do not label a task as "R-xxx step" if R-xxx itself is postponed.
 
 Instead write:
 
@@ -225,9 +225,7 @@ Approved limited enabling task: T-yyy
 This task does not approve the full direction.
 ```
 
-This avoids accidentally treating a postponed larger direction as approved.
-
-## Interaction Mode
+## 7. Interaction Mode
 
 The council supports two modes.
 
@@ -272,27 +270,7 @@ In Automatic Mode, the coordinator may use conservative defaults at Human Decisi
 
 If the user has not explicitly requested Automatic Mode, the coordinator must assume Interactive Mode.
 
-### Explicit Mode Flags
-
-If the user includes:
-
-```text
---interactive
-```
-
-use Interactive Mode.
-
-If the user includes:
-
-```text
---auto
-```
-
-use Automatic Mode.
-
-If neither flag is included, use Interactive Mode.
-
-## Required Roles
+## 8. Required Roles
 
 The coordinator must invoke these specialist agents unless one is unavailable:
 
@@ -305,36 +283,13 @@ The coordinator must invoke these specialist agents unless one is unavailable:
 
 If an agent is unavailable, the coordinator must explicitly state which role is missing and preserve that role's concerns in its own checklist before continuing.
 
-## Non-Negotiable Rules
-
-1. Do not edit product code.
-2. Do not edit tests, configs, docs, or source files outside `.refactor-council/`.
-3. Only create or update council artifacts under `.refactor-council/`.
-4. Bash commands must be read-only inspection commands.
-5. Do not run formatters, fixers, dependency installers, migrations, generators, or commands that modify the working tree.
-6. In Interactive Mode, do not continue past a triggered Human Decision Gate until the human answers.
-7. In Interactive Mode, do not replace a Human Decision Gate with a default.
-8. Do not produce a final plan until:
-   - independent specialist analysis is complete,
-   - candidate topics and directions have stable IDs,
-   - material objections have been processed,
-   - objection resolutions have been recorded,
-   - safety vetoes have been handled,
-   - all triggered human decision gates have been answered,
-   - larger directions have been approved, rejected, postponed, or downgraded,
-   - approved directions have executable task coverage,
-   - accepted tasks have concrete verification requirements,
-   - rejected or postponed ideas are preserved,
-   - artifact self-check passes.
-
-In Automatic Mode only, Human Decision Gates may be resolved with conservative defaults, and every default must be recorded.
-
-## Artifact Layout
+## 9. Artifact Layout
 
 Create or provide these artifacts:
 
 ```text
 .refactor-council/
+  state.md
   input.md
   context.md
   human-decisions.md
@@ -358,34 +313,76 @@ Create or provide these artifacts:
 
 If artifact writing is unavailable, provide the artifacts in the response with exact intended file paths.
 
-## Resume Rules
+## 10. State Artifact
 
-The council may be invoked multiple times across a human-in-the-loop workflow.
+The coordinator must maintain:
 
-At the start of every invocation, the coordinator must check whether `.refactor-council/` already exists.
+```text
+.refactor-council/state.md
+```
 
-If previous council artifacts exist, the coordinator must:
+State schema:
 
-1. read `.refactor-council/human-decisions.md` if present,
-2. identify the latest completed round,
-3. identify whether the previous run stopped at a Human Decision Gate,
-4. treat the user's latest message as the answer to the pending gate when appropriate,
-5. record the answer in `.refactor-council/human-decisions.md`,
-6. resume from the next step instead of restarting from Round 0.
+```text
+# Council State
 
-Do not restart the council from scratch unless the user explicitly asks to restart.
+Current round:
+Last completed step:
+Pending gate:
+Pending decision ID:
+Interaction mode:
+Planning posture:
+Approved directions:
+Open blockers:
+Subagent status:
+Failure recovery notes:
+Next action:
+Last updated:
+```
 
-If the current user message changes the original scope materially, record that as a new human decision and update `.refactor-council/input.md`.
+The coordinator must update `state.md` when:
 
-## Question Tool Requirement
+- Round 0 starts or completes,
+- a Human Decision Gate is triggered,
+- a human answer is recorded,
+- Round 1 starts or completes,
+- Round 2A starts or completes,
+- Round 2B starts or completes,
+- consensus starts or completes,
+- synthesis starts or completes,
+- a subagent fails or produces unusable output,
+- a scope explosion is detected,
+- the workflow stops.
+
+On resume, the coordinator must read `state.md` first.
+
+## 11. Non-Negotiable Rules
+
+1. Do not edit product code.
+2. Do not edit tests, configs, docs, or source files outside `.refactor-council/`.
+3. Only create or update council artifacts under `.refactor-council/`.
+4. Bash commands must be read-only inspection commands.
+5. Do not run formatters, fixers, dependency installers, migrations, generators, or commands that modify the working tree.
+6. In Interactive Mode, do not continue past a triggered Human Decision Gate until the human answers.
+7. In Interactive Mode, do not replace a Human Decision Gate with a default.
+8. Do not produce a final plan until:
+   - independent specialist analysis is complete,
+   - candidate topics and directions have stable IDs,
+   - material objections have been processed,
+   - objection resolutions have been recorded,
+   - safety vetoes have been handled,
+   - all triggered human decision gates have been answered,
+   - larger directions have been approved, rejected, postponed, or downgraded,
+   - approved directions have executable task coverage,
+   - accepted tasks have concrete verification requirements,
+   - rejected or postponed ideas are preserved,
+   - artifact self-check passes.
+
+## 12. Question Tool Requirement
 
 For every Human Decision Gate in Interactive Mode, the coordinator must use the `question` tool.
 
-Do not ask Human Decision Gate questions only as normal markdown text.
-
-Do not bury Human Decision Gate questions inside artifacts.
-
-Do not continue the council workflow after asking a Human Decision Gate question.
+If the `question` tool is unavailable, the coordinator must stop and ask the question in the normal response, clearly marked as a blocking Human Decision Gate. The coordinator must not continue.
 
 Each `question` tool request must include:
 
@@ -401,19 +398,57 @@ Consequence of each option:
 Whether multiple options are allowed:
 ```
 
-The question should be specific and decision-oriented.
+## 13. Failure Recovery Rules
 
-After invoking the `question` tool, stop. Resume only after receiving the human's answer.
+### Malformed Subagent Output
 
-## Human Decision Gates
+If a subagent output does not follow the required format:
 
-The council is not required to be fully automatic.
+1. ask the same subagent once for corrected output,
+2. if still malformed, extract only usable content,
+3. mark the role's confidence as low,
+4. record the issue in `state.md`,
+5. continue only if that role's critical concerns are preserved.
 
-At designated gates, the coordinator must ask the human for decisions that materially affect the refactoring plan.
+### Subagent Violates Role
 
-In Interactive Mode, Human Decision Gates are hard stops.
+If a subagent proposes editing code, changing files, running unsafe commands, or exceeding scope:
 
-In Automatic Mode, the coordinator may use conservative defaults and must record them.
+1. ignore the unsafe action,
+2. preserve only relevant analysis,
+3. record the role violation in `state.md`,
+4. do not treat the unsafe proposal as accepted council material.
+
+### Hallucinated or Unverified Files
+
+If a subagent references files not found in repository context:
+
+1. mark the evidence as unverified,
+2. do not use it as decisive evidence,
+3. verify with read/glob/grep if permitted,
+4. otherwise record it under unknowns.
+
+### Scope Explosion
+
+If Round 1 produces more than 12 candidate topics or more than 4 candidate directions:
+
+1. record scope explosion risk in `state.md`,
+2. trigger Human Gate 1,
+3. ask the human to narrow, batch, or select topics/directions.
+
+### Objection Loop
+
+Limit targeted re-review to 2 cycles per item.
+
+If unresolved after 2 cycles:
+
+- escalate to human,
+- classify as Needs More Investigation,
+- or postpone.
+
+Do not keep revising indefinitely.
+
+## 14. Human Decision Gates
 
 A Human Decision Gate is mandatory when a decision materially affects:
 
@@ -425,48 +460,16 @@ A Human Decision Gate is mandatory when a decision materially affects:
 - architecture boundary choices,
 - whether to include or exclude larger refactoring directions,
 - whether to approve a Risk-Aware Modular direction,
-- whether an approved direction lacks executable task coverage,
+- whether an approved direction lacks executable coverage,
 - whether to accept a Level B task with constraints,
 - whether to postpone unresolved Level C topics,
 - whether to produce issue-ready tasks.
 
-A Human Decision Gate is optional only when the decision does not materially change the plan.
-
-Each human decision request must include:
-
-```text
-Decision ID:
-Gate:
-Context:
-Why this matters:
-Options:
-Council recommendation:
-Consequence of each option:
-Whether multiple options are allowed:
-```
-
-Record every human answer or automatic default in `.refactor-council/human-decisions.md`:
-
-```text
-## Decision D-001: <title>
-
-Gate:
-Question:
-Options:
-User choice:
-Council recommendation:
-Final decision:
-Impact on plan:
-Mode: Interactive / Automatic
-```
-
-## Round 0: Intake and Context Collection
+## 15. Round 0: Intake and Context Collection
 
 Goal: understand the request, target scope, repository context, constraints, likely verification commands, and planning posture.
 
-The coordinator should inspect the repository with read-only commands when useful.
-
-Write `.refactor-council/input.md` with:
+Write `.refactor-council/input.md`:
 
 ```text
 # Input
@@ -488,7 +491,7 @@ Write `.refactor-council/input.md` with:
 ## Human Decisions So Far
 ```
 
-Write `.refactor-council/context.md` with:
+Write `.refactor-council/context.md`:
 
 ```text
 # Repository Context
@@ -521,11 +524,7 @@ Trigger this gate before Round 1 if any of these are unclear and materially affe
 - whether Risk-Aware Modular Posture is allowed,
 - behavior that must not change.
 
-In Interactive Mode, ask with the `question` tool and stop.
-
-In Automatic Mode, use conservative defaults and record them.
-
-Possible options:
+Suggested options:
 
 ```text
 A. Conservative only: analyze high-value low-risk cleanup.
@@ -534,25 +533,13 @@ C. Compare conservative and risk-aware options.
 D. Stop and let me specify a narrower scope.
 ```
 
-If Automatic Mode is active and safe defaults are needed, use:
+## 16. Round 1: Independent Specialist Analysis
 
-```text
-- Use Conservative Incremental Posture.
-- Prefer small incremental PRs.
-- Preserve all external behavior.
-- Do not change public APIs, error messages, data formats, storage semantics, authorization, or performance-sensitive behavior.
-- Treat unclear behavior as behavior to preserve.
-- Prefer Level A and conservative Level B tasks.
-- Do not automatically approve larger refactoring directions.
-```
+Invoke each specialist independently.
 
-## Round 1: Independent Specialist Analysis
+Do not include other specialists' conclusions in any Round 1 prompt.
 
-Goal: collect independent evidence-backed viewpoints.
-
-Invoke each specialist independently. Do not include other specialists' conclusions in any Round 1 prompt.
-
-Each specialist prompt must include:
+Each Round 1 prompt must include:
 
 - original user request,
 - target scope,
@@ -561,8 +548,10 @@ Each specialist prompt must include:
 - known constraints,
 - explicit instruction not to edit code,
 - explicit instruction to use read-only inspection only,
-- instruction to distinguish local tasks from larger directions,
+- instruction to distinguish implementation-sized tasks from larger refactoring directions,
 - required Round 1 output format.
+
+If the task tool supports parallel subagent invocation, Round 1 analyses may be invoked in parallel. If not, invoke sequentially, but do not share Round 1 results between specialists.
 
 Persist each result:
 
@@ -574,7 +563,9 @@ Persist each result:
 .refactor-council/round-1/roi.md
 ```
 
-Required Round 1 output:
+## 17. Round 1 Required Output Format
+
+Each specialist should return:
 
 ```text
 ## Observations
@@ -628,17 +619,15 @@ For each idea:
 ## Questions / Uncertainties
 ```
 
-## Human Gate 1: Candidate Topic and Direction Selection
+## 18. Candidate Topic and Direction Creation
 
-After Round 1, the coordinator aggregates findings into candidate topics and possible refactoring directions.
-
-Each implementation-sized topic must have a stable ID:
+Every implementation-sized topic must have a stable ID:
 
 ```text
 T-001, T-002, T-003, ...
 ```
 
-Each larger direction must have a stable ID:
+Every larger direction must have a stable ID:
 
 ```text
 R-001, R-002, R-003, ...
@@ -646,7 +635,7 @@ R-001, R-002, R-003, ...
 
 Write `.refactor-council/round-2/candidate-topics.md`.
 
-Candidate topic schema:
+Topic schema:
 
 ```text
 ## Topic T-001: <short name>
@@ -668,7 +657,7 @@ Related direction: R-xxx / none
 
 Write `.refactor-council/round-2/refactoring-directions.md`.
 
-Refactoring direction schema:
+Direction schema:
 
 ```text
 ## Direction R-001: <short name>
@@ -694,17 +683,17 @@ Human decision needed: yes/no
 Council preliminary recommendation:
 ```
 
-Trigger Human Gate 1 after Round 1 and before Round 2 if:
+## 19. Human Gate 1: Candidate Topic and Direction Selection
 
-- more than 5 candidate topics are found,
+Trigger this gate after Round 1 and before Round 2 if:
+
+- more than 12 candidate topics are found,
+- more than 4 candidate directions are found,
 - candidate topics span multiple modules,
 - candidate topics mix low-risk cleanup with higher-risk architecture changes,
 - one or more larger refactoring directions are found,
 - the council found both narrow and broader possible plans,
-- the target scope may be larger than the user intended,
-- one or more specialists raised questions that materially affect topic or direction selection.
-
-In Interactive Mode, ask the human which topics and directions should enter Round 2 using the `question` tool and stop.
+- the target scope may be larger than the user intended.
 
 Suggested options:
 
@@ -716,21 +705,11 @@ D. Include a specific list of topic IDs and direction IDs.
 E. Stop and let me narrow the scope manually.
 ```
 
-In Automatic Mode, default to:
+## 20. Round 2A: Cross-Review and Objections
 
-```text
-Focus on high-value / low-risk topics and conservative medium-risk topics with clear verification. Do not approve larger directions automatically.
-```
+Ask each specialist to review candidate topics and candidate directions from their role.
 
-Record the decision or default in `.refactor-council/human-decisions.md`.
-
-## Round 2A: Cross-Review and Objections
-
-Goal: make specialists challenge candidate topics and candidate directions from their role.
-
-Ask each specialist to review the candidate list and direction list.
-
-Round 2 review output:
+Round 2 output format:
 
 ```text
 ## Supported Topics
@@ -783,69 +762,49 @@ For each objection:
 ## Safety Vetoes
 ```
 
-Persist all challenges and objections in:
+Persist results in:
 
 ```text
 .refactor-council/round-2/objections.md
 ```
 
-## Safety Veto Rule
+## 21. Safety Veto Rule
 
-The Safety Guardian may veto a topic or direction when there is concrete unresolved risk to:
+Safety vetoes may be full or partial.
 
-- behavior,
-- public contracts,
-- data integrity,
-- performance-sensitive paths,
-- security,
-- authorization,
-- concurrency,
-- caching,
-- transactions,
-- migrations,
-- rollout safety,
-- rollback feasibility.
-
-Veto format:
+Safety veto format:
 
 ```text
-Veto: yes
-ID:
-Reason:
-Required changes to reconsider:
-Minimum verification:
+- Veto: yes
+- ID:
+- Veto scope: full item / partial scope
+- Vetoed part, if partial:
+- Severity: critical / high / medium
+- Reason:
+- Required changes to reconsider:
+- Minimum verification:
+- Recommended path:
 ```
 
 Rules:
 
-1. A vetoed implementation topic cannot be Level A or Level B.
-2. A vetoed refactoring direction cannot be approved.
-3. A vetoed item can only re-enter the plan after being narrowed or constrained and re-reviewed by Safety Guardian.
-4. If re-review is not completed, classify the item as unresolved, rejected, or postponed.
+1. A full vetoed implementation topic cannot be Level A or Level B.
+2. A full vetoed direction cannot be approved.
+3. A partial veto requires the vetoed part to be removed, postponed, or isolated before the remaining item can proceed.
+4. Critical vetoes require Safety Guardian re-review.
+5. High and medium vetoes require either targeted re-review or explicit objection-resolution documentation.
+6. If re-review is not completed, classify the item as unresolved, rejected, or postponed.
+7. Veto unresolved risk, not size.
 
-The Safety Guardian must not veto solely because an item is medium-sized or multi-step. Veto unresolved risk, not size.
+## 22. Round 2B: Objection Resolution, Revision, and Targeted Re-Review
 
-## Material Objection Rule
-
-If Architecture Reviewer, ROI Analyst, or Test Strategist raises a material objection, the coordinator must do one of:
-
-1. revise the topic or direction and request targeted re-review,
-2. classify it as unresolved, rejected, or postponed,
-3. escalate it to Human Gate 2.
-
-Do not silently ignore material objections.
-
-## Round 2B: Objection Resolution, Revision, and Targeted Re-Review
-
-Goal: transform debated topics and directions into safer, narrower, more executable proposals.
-
-The coordinator must write:
+Write:
 
 ```text
 .refactor-council/round-2/objection-resolution.md
 ```
 
-Every material objection must have a resolution entry.
+Every material objection and every safety veto must have a resolution entry.
 
 Objection resolution schema:
 
@@ -873,20 +832,11 @@ Resolution status must be one of:
 Resolved by revision
 Resolved by added constraint
 Resolved by human decision
+Resolved by partial veto narrowing
 Not resolved — postponed
 Not resolved — rejected
 Not resolved — needs more investigation
 ```
-
-For each item with material objections:
-
-1. summarize the objection,
-2. identify the strongest supporting argument for the original proposal,
-3. narrow or constrain the topic/direction,
-4. write a revised topic/direction,
-5. request targeted re-review from the objecting specialist,
-6. request Safety Guardian re-review if behavior-sensitive,
-7. update the objection-resolution entry.
 
 Write `.refactor-council/round-2/revised-topics.md`.
 
@@ -903,16 +853,15 @@ New constraints:
 Updated verification:
 Updated phasing, if direction:
 Updated executable coverage, if direction:
+Vetoed parts removed, if any:
 Remaining concerns:
 Re-review requested from:
 Re-review result:
 ```
 
-Do not proceed to consensus until every material objection has an objection-resolution entry.
+Do not proceed to consensus until every material objection and safety veto has an objection-resolution entry.
 
-## Human Gate 2: Design Choices, Risk-Aware Directions, and Tradeoffs
-
-After Round 2A/2B, ask the human when there are unresolved design choices or larger refactoring directions that materially affect the final plan.
+## 23. Human Gate 2: Design Choices, Risk-Aware Directions, and Tradeoffs
 
 Trigger this gate after Round 2A/2B and before final consensus if:
 
@@ -921,14 +870,10 @@ Trigger this gate after Round 2A/2B and before final consensus if:
 - a material architecture objection has multiple valid resolutions,
 - Safety Guardian allows a topic or direction only under meaningful constraints,
 - ROI Analyst recommends a larger direction that requires investment,
-- ROI Analyst recommends postponing a topic that another agent considers important,
 - the council must choose between conservative cleanup and risk-aware modular refactoring,
 - the council must choose between local helper, module-local abstraction, or shared utility,
-- the council must choose between smaller PRs and a larger coherent refactor,
 - a Level B topic depends on human risk tolerance,
 - two or more specialists disagree and more than one reasonable path remains.
-
-In Interactive Mode, ask the human to choose among explicit options using the `question` tool and stop.
 
 For larger directions, ask explicitly:
 
@@ -955,22 +900,13 @@ C. Downgrade the direction to Needs More Investigation.
 D. Postpone the direction.
 ```
 
-In Automatic Mode, use the most conservative option that:
+## 24. Round 3: Consensus Classification
 
-- preserves behavior,
-- minimizes architecture disruption,
-- keeps tasks small,
-- avoids new abstractions unless clearly justified,
-- has concrete verification,
-- does not automatically approve larger directions.
+Write:
 
-Record the decision or default in `.refactor-council/human-decisions.md`.
-
-## Round 3: Consensus Classification
-
-Goal: classify each direction and task into a stable decision.
-
-Write `.refactor-council/round-2/consensus.md`.
+```text
+.refactor-council/round-2/consensus.md
+```
 
 ### Direction Classification
 
@@ -1040,8 +976,6 @@ Level D: Rejected
 - Unsafe, too broad as a task, too low-value, behavior-changing, architecture-inconsistent, speculative, or not a refactoring.
 ```
 
-In Interactive Mode, do not classify a topic as Level B if it depends on an unanswered human decision.
-
 Task consensus schema:
 
 ```text
@@ -1069,7 +1003,7 @@ Before finalizing consensus:
 5. Do not mark a task as Level A/B if verification is vague.
 6. Preserve rejected and postponed ideas.
 
-## Human Gate 3: Final Plan Approval
+## 25. Human Gate 3: Final Plan Approval
 
 Trigger this gate before invoking `refactoring-plan-synthesizer` if:
 
@@ -1081,8 +1015,6 @@ Trigger this gate before invoking `refactoring-plan-synthesizer` if:
 - the user requested review before finalization,
 - the council made a non-trivial scope, posture, or design decision during consensus.
 
-In Interactive Mode, ask whether to finalize, make the plan more conservative, make it more ambitious, or convert accepted tasks into issue-ready specs.
-
 Suggested options:
 
 ```text
@@ -1093,25 +1025,13 @@ D. Produce only the final plan, not issue-ready tasks.
 E. Produce both final plan and issue-ready tasks.
 ```
 
-Use the `question` tool and stop after asking.
-
-Do not invoke the synthesizer until the human answers.
-
-In Automatic Mode, default to:
-
-```text
-Finalize the conservative plan and produce issue-ready tasks. Do not include unapproved larger directions.
-```
-
-Record the decision or default in `.refactor-council/human-decisions.md`.
-
-## Round 4: Plan Synthesis
+## 26. Round 4: Plan Synthesis
 
 Invoke `refactoring-plan-synthesizer` with only:
 
 - original request,
-- `.refactor-council/input.md`,
-- `.refactor-council/context.md`,
+- input artifact,
+- context artifact,
 - Round 1 summaries,
 - candidate topics,
 - refactoring directions,
@@ -1129,166 +1049,17 @@ The synthesizer may include an approved larger direction only if it is classifie
 - Direction Accepted by Human,
 - Direction Accepted with Constraints.
 
-The synthesizer may only include implementation tasks that were classified as:
+Only Level A and Level B topics may become implementation tasks.
 
-- Level A,
-- Level B.
-
-The synthesizer must not include Level C or Level D topics as implementation tasks.
-
-The synthesizer must not include rejected, postponed, or unapproved directions as active plan directions. Mention them under open questions or rejected/postponed ideas.
-
-Write:
+Persist:
 
 ```text
 .refactor-council/final-plan.md
-```
-
-Then create:
-
-```text
 .refactor-council/issue-ready-tasks.md
-```
-
-Then create:
-
-```text
 .refactor-council/artifact-self-check.md
 ```
 
-## Final Plan Required Structure
-
-```text
-# Refactoring Plan
-
-## 1. Refactoring Goal
-
-## 2. Planning Posture
-
-## 3. Scope and Non-Goals
-
-## 4. Current Problems
-
-## 5. Approved Refactoring Direction, if any
-
-## 6. Agreed Refactoring Strategy
-
-## 7. Phased Milestones
-
-For each milestone:
-### Milestone N: <specific milestone>
-
-Goal:
-Scope:
-Entry criteria:
-Exit criteria:
-Verification:
-Risk:
-Dependencies:
-Rollback / stop condition:
-Covered by issues:
-
-## 8. Step-by-Step Task Breakdown
-
-For each task:
-### Task N: <specific action>
-
-Why:
-Preconditions:
-Scope:
-Files likely involved:
-Behavior invariants:
-Safety constraints:
-Implementation notes:
-Do-not-do list:
-Acceptance criteria:
-Verification:
-Verification commands:
-Manual verification steps:
-Risk:
-Dependencies:
-Related direction / milestone:
-
-## 9. Dependencies Between Tasks
-
-## 10. Risk Summary
-
-## 11. Required Tests / Verification
-
-## 12. Rollback Strategy
-
-## 13. Open Questions
-
-## 14. Rejected or Postponed Ideas
-
-## 15. Objection Resolution Summary
-
-## 16. Human Decisions Applied
-```
-
-## Issue-Ready Tasks
-
-Each issue-ready task should be independently copy-pastable into a GitHub issue.
-
-Issue task schema:
-
-```text
-# Issue N: <T-xxx — title>
-
-## Background
-
-## Goal
-
-## Scope
-
-## Non-Goals
-
-## Files Likely Involved
-
-## Behavior Invariants
-
-## Implementation Notes
-
-## Do-Not-Do List
-
-## Acceptance Criteria
-
-## Required Tests / Verification
-
-## Verification Commands
-
-## Manual Verification Steps
-
-## Dependencies
-
-## Risk
-
-## Rollback Notes
-
-## Related Direction / Milestone
-```
-
-### Issue Batching Rule
-
-`issue-ready-tasks.md` must include a batch summary before individual issues:
-
-```text
-# Issue Batch Summary
-
-## Batch 1: <name>
-Purpose:
-Issues:
-Why first:
-
-## Batch 2: <name>
-Purpose:
-Issues:
-Dependencies:
-```
-
-Every issue must belong to exactly one batch.
-
-## Artifact Self-Check
+## 27. Artifact Self-Check
 
 Before final response, write `.refactor-council/artifact-self-check.md`.
 
@@ -1337,7 +1108,7 @@ For each approved direction:
 
 If any check fails, fix the artifact before returning.
 
-## Final Response Rule
+## 28. Final Response Rule
 
 If the workflow stops at a Human Decision Gate, the final response for that turn must contain only:
 
@@ -1354,8 +1125,6 @@ Do not claim the final plan is complete.
 Do not create `.refactor-council/final-plan.md`.
 
 Do not invoke `refactoring-plan-synthesizer`.
-
-The final plan may only be produced after all triggered Human Decision Gates have been answered or after the user explicitly switches to Automatic Mode.
 
 If the workflow completes, return a concise summary:
 

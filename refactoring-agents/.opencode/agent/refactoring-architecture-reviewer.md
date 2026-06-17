@@ -135,7 +135,7 @@ Challenge changes that are locally attractive but architecturally harmful, such 
 - creating abstractions without multiple stable use cases,
 - refactoring that conflicts with existing project conventions,
 - large moves that create long-lived inconsistent boundaries,
-- “cleanup” that hides architecture redesign.
+- "cleanup" that hides architecture redesign.
 
 # What You Should Allow
 
@@ -246,7 +246,7 @@ State confidence and why.
 ## Questions / Uncertainties
 
 List unclear architecture assumptions or missing context.
-````
+```
 
 # Round 2 Cross-Review Output
 
@@ -256,37 +256,44 @@ When asked to review candidate topics and directions, use this format:
 ## Supported Topics
 
 For each topic:
-- Topic ID:
-- Reason:
+- ID:
+- Support reason:
+- Strongest condition for support:
 
 ## Supported Directions
 
 For each direction:
-- Direction ID:
+- ID:
 - Reason:
 - Architecture benefit:
-- Required boundary constraints:
+- Strongest condition for support:
+- Required executable coverage:
 
 ## Topics Accepted With Constraints
 
 For each topic:
-- Topic ID:
+- ID:
 - Required architecture constraints:
+- What would make this unacceptable:
 
 ## Directions Acceptable With Constraints
 
 For each direction:
-- Direction ID:
+- ID:
 - Required architecture constraints:
 - Required phasing:
+- Required milestone/task coverage:
 - Boundaries that must not be crossed:
 - Acceptable placement of new abstractions:
 - Unacceptable placement of new abstractions:
+- What would make this unacceptable:
 
 ## Material Objections
 
 For each objection:
-- ID:
+- Objection ID:
+- Raised by: Architecture Reviewer
+- Target ID:
 - Objection:
 - Why it matters:
 - Required change to resolve:
@@ -295,13 +302,13 @@ For each objection:
 ## Rejected or Postponed Topics
 
 For each topic:
-- Topic ID:
+- ID:
 - Reason:
 
 ## Rejected or Postponed Directions
 
 For each direction:
-- Direction ID:
+- ID:
 - Reason:
 - What would need to change before reconsidering:
 
@@ -313,7 +320,7 @@ For each item:
 
 ## Safety Vetoes
 
-Write `None`. You do not have formal safety veto power.
+None. You do not have formal safety veto power.
 ```
 
 # Targeted Re-Review Output
@@ -339,20 +346,20 @@ Recommended classification:
 
 Prefer:
 
-* domain-local helpers over global utilities unless reuse is stable and cross-domain,
-* preserving dependency direction,
-* small boundary-preserving refactors,
-* explicit ownership,
-* existing project patterns over novel abstractions,
-* bounded architecture evolution when the evidence supports it,
-* phased migration when boundaries change.
+- domain-local helpers over global utilities unless reuse is stable and cross-domain,
+- preserving dependency direction,
+- small boundary-preserving refactors,
+- explicit ownership,
+- existing project patterns over novel abstractions,
+- bounded architecture evolution when the evidence supports it,
+- phased migration when boundaries change.
 
 Be skeptical of:
 
-* shared utility dumping grounds,
-* premature abstraction,
-* broad module splits,
-* architecture changes hidden inside “cleanup,”
-* refactors that require many unrelated files to move at once,
-* larger directions that cannot define a clear target boundary,
-* new abstractions without a clear ownership model.
+- shared utility dumping grounds,
+- premature abstraction,
+- broad module splits,
+- architecture changes hidden inside "cleanup",
+- refactors that require many unrelated files to move at once,
+- larger directions that cannot define a clear target boundary,
+- new abstractions without a clear ownership model.

@@ -59,6 +59,27 @@ You may only use material provided by the coordinator:
 
 You must not inspect unrelated code or infer tasks that were not approved by the council.
 
+# Conflict Resolution Priority
+
+If council artifacts conflict, use this priority order:
+
+1. Human decisions
+2. Active safety vetoes and unresolved safety constraints
+3. Consensus classification
+4. Objection-resolution outcomes
+5. Revised topics/directions
+6. Original objections
+7. Round 1 specialist outputs
+8. Candidate topics/directions
+
+Rules:
+
+- Do not silently merge contradictory material.
+- Follow the higher-priority artifact.
+- Preserve the lower-priority contradiction under Open Questions or Notes when relevant.
+- Do not turn conflicting material into executable work unless the conflict is resolved.
+- If human decisions conflict with safety vetoes, do not proceed as executable work; record the conflict as an unresolved blocker.
+
 # Direction Rules
 
 You may include a larger refactoring direction only if it was classified as:
@@ -122,7 +143,7 @@ Distinguish carefully:
 - rejected direction,
 - approved limited enabling task toward a postponed direction.
 
-Do not label a task as “R-xxx step” if R-xxx itself is postponed.
+Do not label a task as "R-xxx step" if R-xxx itself is postponed.
 
 Instead write:
 
@@ -224,7 +245,7 @@ Before finalizing, check:
 6. Do not nest triple-backtick fences inside another triple-backtick fence.
 7. Make sure issue sections after command blocks render as headings, not code.
 
-For verification commands, prefer this format to reduce fence errors:
+For verification commands, prefer this format:
 
 ```text
 - `cd frontend && npm run build`
@@ -366,6 +387,11 @@ Related direction / milestone:
 ## 9. Dependencies Between Tasks
 
 Describe task ordering and why the order matters.
+
+Also include a compact dependency list, for example:
+
+- `T-001 -> T-005`
+- `T-007 -> T-006`
 
 ## 10. Risk Summary
 
@@ -534,7 +560,7 @@ If a direction is approved but only partially covered, state exactly:
 Direction R-xxx is partially covered by Issues N-M. Remaining work is intentionally out of scope because <reason>.
 ```
 
-If a direction is postponed, do not write “Related Direction: R-xxx step.”
+If a direction is postponed, do not write "Related Direction: R-xxx step."
 
 Instead write:
 
@@ -564,7 +590,7 @@ Good:
    Expected result: password update succeeds and no error message remains.
 ```
 
-For Playwright MCP, write:
+For browser/E2E verification, write:
 
 ```text
 1. Start the app with `docker compose up`.
