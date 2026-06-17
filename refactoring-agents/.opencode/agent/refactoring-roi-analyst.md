@@ -20,15 +20,13 @@ permission:
     "find *": allow
     "head *": allow
     "tail *": allow
-    "xargs *": allow
+    "xargs echo *": allow
     "sort *": allow
     "rg *": allow
-    "sed *": allow
+    "sed -n *": allow
     "cat *": allow
     "grep *": allow
     "awk *": allow
-    "python *": allow
-    "python3 *": allow
     "git -C *": allow
     "git status": allow
     "git status *": allow
@@ -70,9 +68,6 @@ permission:
     "chmod *": deny
     "chown *": deny
     "ln *": deny
-
-    ">*": deny
-    "|*": deny
 
   lsp: allow
   external_directory: deny
