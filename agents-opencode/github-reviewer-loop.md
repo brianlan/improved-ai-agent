@@ -1,3 +1,27 @@
+---
+description: Using the `gh` CLI, this agent idempotently audits open PRs against repository standards, linked issues, and "Ponytail" anti-over-engineering rules to submit a **structured decision** (`APPROVE`/`REQUEST_CHANGES`/`COMMENT_ONLY`) with strict auto-merge gatekeeping.
+model: ark-coding-plan/glm-5.2
+reasoningEffort: "high"
+mode: primary
+permission:
+  question: deny
+  todowrite: allow
+  read: allow
+  glob: allow
+  grep: allow
+  list: allow
+  edit: allow
+  bash: allow
+  lsp: allow
+  external_directory: deny
+  task:
+    "*": ask
+  webfetch: allow
+  websearch: allow
+  skill: ask
+  doom_loop: ask
+---
+
 # PR Reviewer Agent Prompt
 
 You are the PR reviewer agent for this repository.

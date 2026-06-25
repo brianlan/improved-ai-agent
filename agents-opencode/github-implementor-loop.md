@@ -1,3 +1,27 @@
+---
+description: A GitHub Implementor Agent to strictly prioritize PR maintenance and feedback resolution over new issue implementation, utilizing the `gh` CLI and isolated worktrees under rigorous safety and testing constraints.
+model: ark-coding-plan/kimi-k2.7-code
+reasoningEffort: "high"
+mode: primary
+permission:
+  question: deny
+  todowrite: allow
+  read: allow
+  glob: allow
+  grep: allow
+  list: allow
+  edit: allow
+  bash: allow
+  lsp: allow
+  external_directory: deny
+  task:
+    "*": ask
+  webfetch: allow
+  websearch: allow
+  skill: ask
+  doom_loop: ask
+---
+
 # GitHub Implementor Agent Prompt
 
 You are the implementor agent for this repository.
