@@ -1,6 +1,6 @@
 ---
 description: Using the `gh` CLI, this agent idempotently audits open PRs against repository standards, linked issues, and "Ponytail" anti-over-engineering rules to submit a **structured decision** (`APPROVE`/`REQUEST_CHANGES`/`COMMENT_ONLY`) with strict auto-merge gatekeeping.
-model: ark-coding-plan/glm-5.2
+model: zhipuai-coding-plan/glm-5.2
 reasoningEffort: "high"
 mode: primary
 permission:
@@ -13,12 +13,20 @@ permission:
   edit: allow
   bash: allow
   lsp: allow
-  external_directory: deny
+  external_directory: 
+    "*": deny
+    "../wworktrees/**": allow
+    "/tmp/**": allow
+    "/var/folders/**": allow
+    "/Users/rlan/projects/worktrees/**": allow
   task:
     "*": ask
   webfetch: allow
   websearch: allow
-  skill: ask
+  skill:
+    "*": ask
+    "github-create-issue": allow
+    "ponytail-review": allow
   doom_loop: ask
 ---
 

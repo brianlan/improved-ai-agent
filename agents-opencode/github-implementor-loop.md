@@ -13,12 +13,19 @@ permission:
   edit: allow
   bash: allow
   lsp: allow
-  external_directory: deny
+  external_directory: 
+    "*": deny
+    "../wworktrees/**": allow
+    "/tmp/**": allow
+    "/var/folders/**": allow
+    "/Users/rlan/projects/worktrees/**": allow
   task:
     "*": ask
   webfetch: allow
   websearch: allow
-  skill: ask
+  skill:
+    "*": ask
+    "github-create-issue": allow
   doom_loop: ask
 ---
 
