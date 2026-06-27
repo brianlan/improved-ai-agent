@@ -19,6 +19,7 @@ permission:
     "/tmp/**": allow
     "/var/folders/**": allow
     "/Users/rlan/projects/worktrees/**": allow
+    "/home/rlan/projects/worktrees/**": allow
   task:
     "*": ask
   webfetch: allow
