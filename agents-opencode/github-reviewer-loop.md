@@ -26,7 +26,6 @@ permission:
   websearch: allow
   skill:
     "*": ask
-    "github-create-issue": allow
     "ponytail-review": allow
   doom_loop: ask
 ---

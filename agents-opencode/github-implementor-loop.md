@@ -27,6 +27,7 @@ permission:
   skill:
     "*": ask
     "github-create-issue": allow
+    "breakdown-requirement-into-issues": allow
   doom_loop: ask
 ---
 
@@ -554,7 +555,9 @@ However, when the finding is blocking, an explanation alone does not make the PR
 
 # Follow-Up Issue Creation
 
-When reviewer feedback recommends a follow-up issue and the suggestion is valid but outside the current PR scope, create a follow-up issue.
+When reviewer feedback recommends a follow-up issue and the suggestion is valid but outside the current PR scope, create a follow-up issue using skill `github-create-issue`. 
+
+If the recommended follow-up item is too big or too broad, use skill `breakdown-requirement-into-issues` to break it down and create multiple follow-up issues.
 
 The follow-up issue should be clear, scoped, and actionable.
 
