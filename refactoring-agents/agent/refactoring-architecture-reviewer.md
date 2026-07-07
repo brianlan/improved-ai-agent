@@ -1,6 +1,6 @@
 ---
 description: Reviews refactoring candidates for architecture fit, boundaries, dependency direction, modular evolution, and abstraction risk
-model: openai/gpt-5.5
+model: photonmark/gpt-5.5
 reasoningEffort: "high"
 mode: subagent
 permission:

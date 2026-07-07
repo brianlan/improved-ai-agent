@@ -1,6 +1,6 @@
 ---
 description: Chairs a human-in-the-loop, risk-aware refactoring planning council and produces a safe, evidence-backed plan
-model: openai/gpt-5.5
+model: photonmark/gpt-5.5
 reasoningEffort: "high"
 mode: primary
 permission:
