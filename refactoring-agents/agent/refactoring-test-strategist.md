@@ -1,6 +1,6 @@
 ---
 description: Designs verification strategy for behavior-preserving refactoring plans
-model: opencode-go/deepseek-v4-pro
+model: ark-coding-plan/glm-5.2
 reasoningEffort: "high"
 mode: subagent
 permission:

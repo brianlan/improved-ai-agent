@@ -1,6 +1,6 @@
 ---
 description: Ranks refactoring opportunities by value, complexity, risk, sequencing, larger-direction value, and overengineering risk
-model: xiaomi/mimo-v2.5-pro
+model: opencode-go/deepseek-v4-pro
 reasoningEffort: "high"
 mode: subagent
 permission:

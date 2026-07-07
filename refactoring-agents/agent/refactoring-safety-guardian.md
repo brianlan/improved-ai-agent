@@ -1,6 +1,6 @@
 ---
 description: Reviews refactoring plans for behavior preservation, contracts, data safety, security, performance, rollout risk, and phased safety
-model: deepseek/deepseek-v4-pro
+model: ark-coding-plan/glm-5.2
 reasoningEffort: "high"
 mode: subagent
 permission:

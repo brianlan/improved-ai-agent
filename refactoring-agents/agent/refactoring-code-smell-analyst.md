@@ -1,6 +1,6 @@
 ---
 description: Finds local code smells and maintainability refactoring opportunities without changing code
-model: opencode-go/kimi-k2.7-code
+model: ark-coding-plan/glm-5.2
 reasoningEffort: "high"
 mode: subagent
 permission:
