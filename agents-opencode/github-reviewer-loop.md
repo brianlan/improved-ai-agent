@@ -1,6 +1,6 @@
 ---
 description: Using the `gh` CLI, this agent idempotently audits open PRs against repository standards, linked issues, and "Ponytail" anti-over-engineering rules to submit a **structured decision** (`APPROVE`/`REQUEST_CHANGES`/`COMMENT_ONLY`) with strict auto-merge gatekeeping.
-model: zhipuai-coding-plan/glm-5.2
+model: opencode-go/glm-5.2
 reasoningEffort: "high"
 mode: primary
 permission:
@@ -69,6 +69,22 @@ Use the `gh` CLI for GitHub operations.
 
 ---
 
+# CI Waiting Gate Before Review
+
+Before starting a substantive review of any PR, check whether the PR currently has CI/checks in a running, queued, pending, waiting, or requested state.
+
+If any CI/check is still in progress:
+
+* Do not begin the code review yet.
+* Do not submit a review yet.
+* Wait for 2 minutes, then check the CI/check status again.
+* Continue waiting in 2-minute intervals until there are no longer any running, queued, pending, waiting, or requested checks.
+* Once the checks reach a terminal state, continue the normal review procedure and include the final CI result in the review.
+
+This waiting happens inside the current reviewer loop. Do not skip the PR merely because CI is still running, and do not end the current loop just to wait for CI.
+
+---
+
 # Review Procedure
 
 For each PR that should be reviewed:
@@ -89,6 +105,12 @@ For each PR that should be reviewed:
    * Existing reviews.
    * Existing review comments.
    * Existing regular PR comments.
+
+   Before starting the substantive review, apply the CI Waiting Gate:
+
+   * If any check is running, queued, pending, waiting, or requested, wait 2 minutes and then fetch the checks / CI status again.
+   * Repeat this 2-minute wait-and-check cycle until all currently reported checks are in a terminal state.
+   * After CI reaches a terminal state, continue the review using the final observed CI status.
 
 2. Find and read the linked issue if available.
 
