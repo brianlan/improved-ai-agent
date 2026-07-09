@@ -26,6 +26,7 @@ permission:
     "tail *": allow
     "xargs *": allow
     "sort *": allow
+    "cut *": allow
     "rg *": allow
     "sed -n *": allow
     "cat *": allow
@@ -34,6 +35,7 @@ permission:
     "python *": allow
     "uv *": allow
     "nvx *": allow
+    "npx *": allow
     "git -C *": allow
     "git status": allow
     "git status *": allow
