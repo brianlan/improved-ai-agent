@@ -15,6 +15,8 @@ permission:
   lsp: allow
   external_directory: 
     "*": ask
+    "/tmp/**": allow
+    "/var/folders/**": allow
   task:
     "*": ask
   webfetch: allow

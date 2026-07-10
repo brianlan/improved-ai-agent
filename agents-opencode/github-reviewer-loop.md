@@ -15,7 +15,7 @@ permission:
   lsp: allow
   external_directory: 
     "*": deny
-    "../wworktrees/**": allow
+    "../worktrees/**": allow
     "/tmp/**": allow
     "/var/folders/**": allow
     "/Users/rlan/projects/worktrees/**": allow
