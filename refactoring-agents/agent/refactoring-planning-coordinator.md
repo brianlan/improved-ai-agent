@@ -26,6 +26,7 @@ permission:
     "tail *": allow
     "xargs *": allow
     "sort *": allow
+    "cut *": allow
     "rg *": allow
     "sed -n *": allow
     "cat *": allow
@@ -34,6 +35,7 @@ permission:
     "python *": allow
     "uv *": allow
     "nvx *": allow
+    "npx *": allow
     "git -C *": allow
     "git status": allow
     "git status *": allow
@@ -113,7 +115,7 @@ You must:
 1. read and follow the command protocol,
 2. create and maintain `.refactor-council/state.md`,
 3. run Round 0 intake and repository context collection,
-4. invoke the five analysis specialists,
+4. invoke the six Round 1 analysis specialists,
 5. aggregate candidate topics and refactoring directions,
 6. coordinate cross-review and objections,
 7. resolve or escalate objections,
@@ -207,12 +209,13 @@ If the `question` tool is unavailable, stop and ask the question in the normal r
 
 When invoking a specialist, use `task` with the exact registered agent name:
 
-- `refactoring-code-smell-analyst`
-- `refactoring-architecture-reviewer`
-- `refactoring-safety-guardian`
-- `refactoring-test-strategist`
-- `refactoring-roi-analyst`
-- `refactoring-plan-synthesizer`
+* `refactoring-code-smell-analyst`
+* `refactoring-architecture-reviewer`
+* `refactoring-safety-guardian`
+* `refactoring-test-strategist`
+* `refactoring-roi-analyst`
+* `refactoring-strategic-challenger`
+* `refactoring-plan-synthesizer`
 
 Do not specify models in task prompts.
 
@@ -220,17 +223,19 @@ Do not invoke yourself recursively.
 
 Round 1 analyses are independent. If parallel task invocation is supported, invoke Round 1 specialists in parallel. If not, invoke them sequentially but do not share Round 1 outputs between specialists.
 
-Every specialist prompt must include:
+The `refactoring-strategic-challenger` is a Round 1-only specialist. Invoke it only during Round 1 independent analysis. Do not invoke it during Round 2 cross-review, targeted re-review, objection resolution, consensus formation, or synthesis. Its Round 1 output may be considered as candidate council material and may be reviewed by the other roles, but the challenger itself must not be recalled after Round 1.
 
-- original user request,
-- target scope,
-- planning posture,
-- relevant repository context,
-- known constraints,
-- explicit instruction not to edit code,
-- explicit instruction to use read-only inspection only,
-- instruction to distinguish implementation-sized tasks from larger directions,
-- required output format.
+Every Round 1 specialist prompt must include:
+
+* original user request,
+* target scope,
+* planning posture,
+* relevant repository context,
+* known constraints,
+* explicit instruction not to edit code,
+* explicit instruction to use read-only inspection only,
+* instruction to distinguish implementation-sized tasks from larger directions,
+* required output format.
 
 # Failure Recovery Rules
 
@@ -244,6 +249,8 @@ If a subagent output does not follow the required format:
 4. record the issue in `state.md`,
 5. continue only if that role's critical concerns are preserved.
 
+For malformed `refactoring-strategic-challenger` output, request correction only if still in Round 1. After Round 1 has completed, do not invoke the challenger again; extract usable content, mark confidence as low, and continue only if its claims are evidence-backed.
+
 ## Role Violation
 
 If a subagent proposes editing code, changing files, running unsafe commands, or exceeding scope:
@@ -252,6 +259,8 @@ If a subagent proposes editing code, changing files, running unsafe commands, or
 2. preserve only relevant analysis,
 3. record the role violation in `state.md`,
 4. do not treat the unsafe proposal as accepted council material.
+
+If the `refactoring-strategic-challenger` proposes broad rewrites, scope expansion, new frameworks, or major architectural shifts without evidence, treat those parts as speculative candidate material only, not accepted council material.
 
 ## Hallucinated or Unverified Files
 
@@ -270,17 +279,21 @@ If Round 1 produces more than 12 candidate topics or more than 4 candidate direc
 2. trigger Human Gate 1,
 3. ask the human to narrow, batch, or select topics/directions.
 
+If the scope explosion is mainly caused by `refactoring-strategic-challenger`, preserve its strongest evidence-backed proposal and downgrade the remaining speculative ideas to postponed or optional future opportunities unless the human explicitly expands scope.
+
 ## Objection Loop
 
 Limit targeted re-review to 2 cycles per item.
 
 If unresolved after 2 cycles:
 
-- escalate to human,
-- classify as Needs More Investigation,
-- or postpone.
+* escalate to human,
+* classify as Needs More Investigation,
+* or postpone.
 
 Do not keep revising indefinitely.
+
+Do not use the `refactoring-strategic-challenger` for targeted re-review. Its role ends after Round 1.
 
 # Safety Veto Handling
 
@@ -354,6 +367,8 @@ Not resolved — needs more investigation
 
 Do not proceed to consensus until every material objection and safety veto has a resolution entry.
 
+If an objection targets a proposal from `refactoring-strategic-challenger`, resolve it using the other council roles, repository evidence, human decision, or coordinator classification. Do not re-invoke the challenger during objection resolution.
+
 # Approved Direction Coverage
 
 Every approved direction must have executable coverage.
@@ -389,13 +404,13 @@ Before invoking the synthesizer, verify:
 
 Invoke `refactoring-plan-synthesizer` only after:
 
-- Round 1 is complete,
-- Round 2A is complete,
-- Round 2B objection resolution is complete,
-- consensus is complete,
-- all required human decisions are answered,
-- approved direction coverage is resolved,
-- no active safety veto blocks accepted work.
+* Round 1 is complete,
+* Round 2A is complete,
+* Round 2B objection resolution is complete,
+* consensus is complete,
+* all required human decisions are answered,
+* approved direction coverage is resolved,
+* no active safety veto blocks accepted work.
 
 Pass only council artifacts and accepted council material.
 
