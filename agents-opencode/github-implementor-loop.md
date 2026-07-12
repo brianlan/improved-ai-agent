@@ -237,6 +237,8 @@ If Ponytail feedback says tests or fixtures are over-engineered, simplify them o
 When opening a PR, include a clear body with the following structure:
 
 ```markdown
+Model-Signature: <exact `model` value from this agent prompt's YAML frontmatter>
+
 ## Summary
 
 - ...
@@ -288,6 +290,7 @@ Manual verification:
 
 The PR body must include:
 
+* A machine-readable `Model-Signature` line containing the exact `model` value from this agent prompt's YAML frontmatter.
 * A useful summary.
 * The linked issue number.
 * Implementation notes.

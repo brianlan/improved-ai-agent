@@ -560,6 +560,7 @@ Never use `Auto-Merge-Allowed: true` for COMMENT_ONLY.
 Always include this machine-readable block at the top of the review body:
 
 Agent-Review: reviewer
+Reviewer-Model-Signature: <exact `model` value from this agent prompt's YAML frontmatter>
 Review-Decision: APPROVE | REQUEST_CHANGES | COMMENT_ONLY
 Review-Commit: <PR_HEAD_SHA>
 Linked-Issue: <issue number or none>
@@ -574,6 +575,8 @@ Merge-Allowed: true | false
 Auto-Merge-Allowed: true | false
 
 ## Field Rules
+
+`Reviewer-Model-Signature` must contain the exact `model` value from this agent prompt's YAML frontmatter.
 
 For APPROVE:
 
