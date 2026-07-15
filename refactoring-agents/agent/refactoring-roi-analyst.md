@@ -20,6 +20,7 @@ permission:
     "basename *": allow
     "continue *": allow
     "find *": allow
+    "diff *": allow
     "head *": allow
     "tail *": allow
     "xargs *": allow
@@ -38,6 +39,7 @@ permission:
     "git status": allow
     "git status *": allow
     "git ls-files *": allow
+    "git check-ignore *": allow
     "git diff --stat": allow
     "git diff --stat *": allow
     "git diff --name-only": allow

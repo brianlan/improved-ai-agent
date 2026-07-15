@@ -1,6 +1,6 @@
 ---
 description: Reviews refactoring plans for behavior preservation, contracts, data safety, security, performance, rollout risk, and phased safety
-model: ark-coding-plan/glm-5.2
+model: ollama-cloud/glm-5.2
 reasoningEffort: "high"
 mode: subagent
 permission:
@@ -20,6 +20,7 @@ permission:
     "basename *": allow
     "continue *": allow
     "find *": allow
+    "diff *": allow
     "head *": allow
     "tail *": allow
     "xargs *": allow
@@ -38,6 +39,7 @@ permission:
     "git status": allow
     "git status *": allow
     "git ls-files *": allow
+    "git check-ignore *": allow
     "git diff --stat": allow
     "git diff --stat *": allow
     "git diff --name-only": allow

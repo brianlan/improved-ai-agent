@@ -1,6 +1,6 @@
 ---
 description: Chairs a human-in-the-loop, risk-aware refactoring planning council and produces a safe, evidence-backed plan
-model: photonmark/gpt-5.5
+model: photonmark/gpt-5.6-sol
 reasoningEffort: "high"
 mode: primary
 permission:
@@ -22,6 +22,7 @@ permission:
     "basename *": allow
     "continue *": allow
     "find *": allow
+    "diff *": allow
     "head *": allow
     "tail *": allow
     "xargs *": allow
@@ -40,6 +41,7 @@ permission:
     "git status": allow
     "git status *": allow
     "git ls-files *": allow
+    "git check-ignore *": allow
     "git diff --stat": allow
     "git diff --stat *": allow
     "git diff --name-only": allow
@@ -90,6 +92,7 @@ permission:
     refactoring-test-strategist: allow
     refactoring-roi-analyst: allow
     refactoring-plan-synthesizer: allow
+    refactoring-strategic-challenger: allow
   webfetch: deny
   websearch: deny
   skill: deny

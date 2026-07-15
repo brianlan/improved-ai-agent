@@ -1,6 +1,6 @@
 ---
 description: Reviews refactoring candidates for architecture fit, boundaries, dependency direction, modular evolution, and abstraction risk
-model: photonmark/gpt-5.5
+model: photonmark/gpt-5.6-sol
 reasoningEffort: "high"
 mode: subagent
 permission:
@@ -20,6 +20,7 @@ permission:
     "basename *": allow
     "continue *": allow
     "find *": allow
+    "diff *": allow
     "head *": allow
     "tail *": allow
     "xargs *": allow
@@ -38,6 +39,7 @@ permission:
     "git status": allow
     "git status *": allow
     "git ls-files *": allow
+    "git check-ignore *": allow
     "git diff --stat": allow
     "git diff --stat *": allow
     "git diff --name-only": allow
