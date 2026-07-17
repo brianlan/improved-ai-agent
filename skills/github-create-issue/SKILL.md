@@ -1,453 +1,291 @@
 ---
 name: github-create-issue
-description: You are an engineering planning agent responsible for creating high-quality GitHub issues from the current conversation context. Your job is not merely to summarize the discussion. Your job is to convert a possibly messy feature/bug discussion into one or more clear, focused, implementable, testable, and reviewable GitHub issues. Use the `gh` CLI for GitHub operations.
+description: Create or draft GitHub issues from an ad hoc feature, bug, or engineering discussion. Use when the user asks to turn a conversation into issue(s), write an issue, or create/publish issue(s). Route large technical requirement documents to breakdown-requirement-into-issues instead.
 ---
 
-# Primary Goal
+# Goal
 
-When the user asks you to create an issue, you must:
+Turn a messy feature, bug, refactor, or engineering discussion into small,
+self-contained GitHub issue drafts. Create issues only with explicit user or
+trusted workflow authorization.
 
-1. Analyze the current conversation context.
-2. Determine whether the discussed work fits into a single GitHub issue.
-3. If it is too large, too risky, or not independently implementable, split it into multiple smaller issues.
-4. For each issue, write a clear, self-contained issue body that gives a future implementor enough context to execute the task without re-reading the entire conversation.
-5. Include implementation guidance, required tests, self-verification instructions, and reviewer acceptance criteria.
-6. Create the issue or issues using `gh`.
+This skill handles ad hoc discussion. Use
+`breakdown-requirement-into-issues` for a large technical requirement
+document. This skill plans work and creates issues; implementation is a
+separate task.
 
----
+## Modes
 
-# Core Principles
+- **Draft mode:** The user asks for a draft, plan, proposal, or issue text
+  without clearly asking to create or publish it. Do not run write commands.
+  Output the issue plan and complete proposed bodies when the context supports
+  them; if blocking details are missing, ask the questions instead of
+  inventing content, then stop.
+- **Create mode:** The user explicitly asks to create, publish, or post the
+  issue(s). Perform the preflight below and create them with `gh`.
+- **Agent-authorized create:** `github-implementor-loop` may explicitly ask
+  this skill to create one concrete, linked follow-up issue from reviewer
+  feedback. That request authorizes only the named follow-up, not unrelated
+  issue creation.
+- **Ambiguous mode:** Treat the request as draft mode and ask whether the user
+  wants the proposed issue(s) created.
 
-## 1. Do not blindly create one issue
+If the user authorizes one issue but the analysis finds multiple required
+boundaries, show the split and ask before creating multiple issues.
 
-Before creating any issue, perform a scope analysis.
+## Agent Contract
 
-A good issue should usually represent one independently implementable and reviewable unit of work.
+Implementation and documentation/planning issues created for
+`github-implementor-loop` and `github-reviewer-loop` must use the exact
+section names in the implementation template below. Those agents treat the
+issue body as the PR acceptance contract, not as background information.
 
-A single issue is acceptable only if:
+Every implementation or documentation/planning issue also includes
+`Developer Checklist` and `Requirement Traceability`. For an ad hoc issue
+without formal requirement IDs, traceability names the source discussion and
+key decisions or says `None`.
 
-- The work has one coherent goal.
-- The implementation can reasonably be completed in one focused PR.
-- The change can be tested and reviewed independently.
-- The issue does not mix unrelated refactors, feature work, bug fixes, migrations, and follow-up cleanup.
-- The implementation path is sufficiently clear.
+An implementor follow-up handoff must identify the current PR or issue, state
+why the work is outside the current scope, and name the concrete follow-up
+goal. Link the created issue back in the PR reply and report its number in the
+handling marker required by `github-implementor-loop`. Route a multi-issue
+follow-up to `breakdown-requirement-into-issues`.
 
-Split the work into multiple issues if:
+## Workflow
 
-- The feature has multiple separable stages.
-- There are multiple independent bugs or behaviors.
-- The work requires both investigation and implementation.
-- There are multiple plausible implementation paths and one needs validation first.
-- The change touches risky infrastructure, data models, APIs, migrations, or user-visible behavior.
-- A reviewer would have difficulty validating the entire change in one PR.
-- Some parts depend on other parts being completed first.
-- Some parts are optional follow-ups rather than required for the core fix.
+### 1. Resolve context
 
-When splitting, make each issue small, meaningful, independently reviewable, and clearly connected to the larger goal.
+Read the full relevant conversation. Separate confirmed requirements,
+constraints, decisions, rejected alternatives, assumptions, open questions,
+and requested outcomes.
 
----
+Before putting conversation content into an issue or handing it to another
+skill, remove credentials,
+tokens, secret values, private URLs, and unnecessary personal data. Replace
+essential sensitive details with safe placeholders. Ask the user for a safe
+description when the sensitive detail is necessary to reproduce the problem.
 
-# Required Pre-Issue Analysis
+In create mode or agent-authorized create mode:
 
-Before creating issues, analyze the current context using the following dimensions.
+1. Resolve the target repository from an explicit `owner/repo` or `--repo`
+   instruction. Otherwise verify the current repository. Always verify
+   authentication:
 
-## Engineering Scope
+   ```bash
+   gh repo view --json nameWithOwner,defaultBranch
+   gh auth status
+   ```
 
-- What is the actual feature, bug, or engineering goal?
-- Is the goal already clear enough to implement?
-- Which parts are core requirements?
-- Which parts are nice-to-have or follow-up work?
-- Which parts were discussed but should not be included?
+2. Stop if the repository or authorization cannot be verified. Never guess
+   the target repository.
+3. Inspect existing labels with `gh label list`.
+4. Search for duplicates and related work using sanitized issue terms:
 
-## Complexity
+   ```bash
+   gh issue list --repo OWNER/REPO --state all --search "relevant keywords" --limit 100
+   gh pr list --repo OWNER/REPO --state all --search "relevant keywords" --limit 100
+   ```
 
-Classify the work as one of:
+   If an exact duplicate exists, report it and stop. If related work exists,
+   reference it in the draft and explain why this work is distinct.
 
-- `Small`: localized change, low uncertainty, straightforward tests.
-- `Medium`: multiple files/components, some design choices, moderate testing.
-- `Large`: broad surface area, unclear details, risky behavior changes, migration, or multiple deliverables.
+In draft mode, use available repository context when useful. Mark unknown
+files, commands, or repository details as assumptions instead of inventing
+them.
 
-## Independence
+Completion criterion: the mode, sanitized source material, and create target
+when applicable are known; every blocking unknown is either clarified or
+listed for the user.
 
-Decide whether the work can be implemented as one issue or should be split.
+### 2. Choose the issue boundary
 
-Consider:
+Create one issue when it has one coherent goal, one implementable path, and
+can be tested and reviewed as one focused change.
 
-- Can one implementor own this end-to-end?
-- Can one PR reasonably close this issue?
-- Can the result be tested independently?
-- Are there natural dependency boundaries?
+Split only at a real boundary:
 
-## Risk
+- separate ownership or independently reviewable work;
+- a dependency that requires a different change to land first;
+- a distinct independently shippable vertical slice; or
+- a blocking investigation that must resolve an unknown before implementation.
 
-Identify risks such as:
+Risk, API involvement, infrastructure involvement, or user-visible behavior
+alone does not justify a split.
 
-- Breaking existing behavior.
-- API compatibility.
-- Data correctness.
-- Performance regression.
-- Security or privacy implications.
-- User-visible behavior changes.
-- Migration or rollout complexity.
-- Insufficient tests or unclear reproduction steps.
+Use one of these issue types:
 
-## Decision
+- **Implementation:** a concrete behavior or code change with an agreed path.
+- **Investigation:** a blocking question, spike, or design validation. Its
+  deliverable is evidence and a decision, not speculative production code.
+- **Planning or documentation:** a non-behavioral task with an explicit
+  no-test justification.
 
-After analysis, explicitly decide:
+For every issue, record a temporary ID, title, type, goal, scope, out of
+scope, dependencies, and required validation. An implementation issue has a
+chosen approach. An investigation issue has a question and decision
+criteria instead of a chosen implementation.
 
-- Create one issue, or
-- Create multiple issues.
+In this agent integration, publish only implementation and
+documentation/planning issues to the unassigned queue. Keep investigation
+issues in draft form unless the user names another owner or workflow for
+them; the implementor loop does not execute investigation work.
 
-If multiple issues are needed, define:
+Completion criterion: each issue has one clear boundary, no unresolved
+implementation choice unless it is an investigation, and explicit
+dependency direction.
 
-- The issue order.
-- Dependencies between issues.
-- Which issue should be implemented first.
-- Whether an umbrella/tracking issue is useful.
+### 3. Draft the issue bodies
 
-Do not create an umbrella issue unless it adds real value. Prefer directly creating the actionable implementation issues.
+Use concrete content, not placeholders or HTML comments. Omit a section only
+when it is genuinely irrelevant; use `None` where a required section has no
+items.
 
----
-
-# Handling Messy Prior Discussion
-
-The prior conversation may include exploratory ideas, weak options, rejected paths, tangents, or unfinished reasoning.
-
-You must distill that discussion into a clear execution path.
-
-For each issue:
-
-- Select the best implementation path based on the discussion.
-- Do not include multiple competing solutions unless the issue is specifically an investigation/design issue.
-- Do not leave the implementor confused about which approach to take.
-- Mention rejected alternatives only briefly, and only when it helps prevent future confusion.
-- Convert vague discussion into concrete implementation instructions.
-- If an assumption is necessary, state it clearly.
-- If a detail is truly unknown but not blocking, include it as an implementation note or reviewer check.
-- If a detail is blocking, ask the user for clarification before creating the issue.
-
----
-
-# Codebase and GitHub Context
-
-Before creating an issue, use available context and perform lightweight repository investigation when needed.
-
-Use codebase search to identify:
-
-- Relevant files, modules, commands, tests, APIs, or existing patterns.
-- Existing related functionality.
-- Existing tests that should be extended.
-- Possible duplicate issues or related open issues.
-
-Use `gh` when appropriate to check existing issues:
-
-```bash
-gh issue list --state open --search "<relevant keywords>"
-```
-
-Avoid creating duplicate issues. If a related issue already exists, tell the user and recommend updating or linking to it instead of blindly creating a new one.
-
----
-
-# Issue Quality Requirements
-
-Each created issue must be self-contained.
-
-A future implementor should be able to understand the task without reading the entire prior conversation.
-
-Each issue must include:
-
-1. A clear title.
-2. Background and context.
-3. Current behavior or problem.
-4. Desired behavior or goal.
-5. Final chosen implementation approach.
-6. Concrete implementation steps.
-7. Relevant files, modules, commands, or code areas if known.
-8. Scope and non-scope.
-9. Required automated tests.
-10. Manual/self-verification steps.
-11. Reviewer acceptance checklist.
-12. Dependencies or follow-up issues if any.
-13. Definition of done.
-
----
-
-# Required Issue Body Format
-
-Use the following Markdown structure for every issue.
+#### Implementation issue
 
 ```markdown
 ## Summary
 
-<!-- One concise paragraph describing what this issue asks the implementor to do. -->
-
 ## Background / Context
-
-<!-- Explain the relevant context from the prior conversation.
-Include important details, constraints, symptoms, user expectations, and any codebase findings.
-This section should make the issue understandable without requiring the implementor to read the original chat. -->
 
 ## Problem
 
-<!-- For a bug: describe the observed behavior and why it is wrong.
-For a feature: describe the missing capability or limitation.
-For a refactor: describe the current design problem and why it matters. -->
-
 ## Goal / Expected Behavior
-
-<!-- Describe the target behavior or desired end state. Be specific and testable. -->
 
 ## Scope
 
-This issue should cover:
-
-- ...
-- ...
-- ...
-
 ## Out of Scope
-
-This issue should not cover:
-
-- ...
-- ...
-- ...
 
 ## Chosen Implementation Approach
 
-<!-- Describe the final recommended path.
-If multiple options were discussed earlier, choose the best one and make the decision explicit.
-Do not leave the implementor to choose between unresolved alternatives unless this is an investigation issue. -->
-
 ## Implementation Plan
-
-The implementor should:
-
-1. ...
-2. ...
-3. ...
-4. ...
 
 ## Relevant Files / Areas
 
-Likely relevant areas:
-
-- `path/to/file_or_module`
-- `path/to/test`
-- `command or config`
-
-<!-- If exact files are unknown, describe the relevant modules or search terms instead. -->
+## Acceptance Criteria
 
 ## Tests Required
 
-The implementor must add or update automated tests covering:
-
-- ...
-- ...
-- ...
-
-At minimum, tests should verify:
-
-- The main happy path.
-- The bug reproduction or feature behavior.
-- Important edge cases.
-- Any regression-prone existing behavior.
-
-If automated tests are genuinely not feasible, the implementor must explain why in the PR and provide stronger manual verification steps.
-
 ## Manual Verification / Self-Check
-
-Before claiming this issue is done, the implementor must:
-
-1. Run the relevant automated test suite.
-2. Manually verify the main behavior described in this issue.
-3. Verify that no related existing behavior regressed.
-4. Record the exact commands run and their results in the PR description.
-
-Suggested verification commands:
-
-    # Fill in project-specific commands, for example:
-    npm test
-    npm run lint
-    pytest
-    go test ./...
 
 ## Reviewer Acceptance Checklist
 
-The reviewer should verify that:
-
-- [ ] The implementation matches the expected behavior described above.
-- [ ] The chosen implementation approach was followed, or any deviation is clearly justified.
-- [ ] The change is appropriately scoped and does not include unrelated work.
-- [ ] Required automated tests were added or updated.
-- [ ] The tests fail or would have failed before the fix where applicable.
-- [ ] The implementor included self-verification results in the PR.
-- [ ] Edge cases and regression risks were considered.
-- [ ] Documentation, comments, or user-facing text were updated if needed.
-
 ## Dependencies
-
-<!-- List dependencies on other issues, PRs, migrations, design decisions, or external systems.
-Use "None" if there are no known dependencies. -->
 
 ## Follow-Up Work
 
-<!-- List useful future work that should not be included in this issue.
-Use "None" if there is no known follow-up work. -->
-
 ## Definition of Done
 
-This issue is done when:
+## Developer Checklist
 
-- ...
-- ...
-- ...
+## Requirement Traceability
 ```
 
----
+The body must explain enough for an implementor to work without rereading the
+conversation. Acceptance criteria describe observable behavior. Tests name
+the behavior or regression they prove; they do not merely say “add tests.”
+Bug issues include a regression test when feasible. Refactor issues describe
+how behavior preservation is verified. Manual verification names exact
+repository commands when known, records expected results, and labels unknown
+commands as repo-specific. The reviewer checklist must tell the reviewer what
+to inspect, not merely say “review the PR.”
 
-# Test Requirements Are Mandatory
-
-Every implementation issue must explicitly require tests.
-
-Do not create an implementation issue that merely says “add tests if needed.”
-
-Instead, specify what tests are expected.
-
-Use language such as:
-
-- “The implementor must add or update tests covering...”
-- “At minimum, tests should verify...”
-- “Before claiming done, the implementor must run...”
-- “The PR description must include the exact verification commands and results.”
-
-If the task is a bug fix, include a regression test requirement whenever possible.
-
-If the task is a feature, include behavior tests for the new capability.
-
-If the task is a refactor, include tests or verification proving behavior preservation.
-
----
-
-# Self-Verification Requirement
-
-Every issue must require the implementor to verify their own work before claiming completion.
-
-The issue must instruct the implementor to include in the PR:
-
-- What was changed.
-- What tests were added or updated.
-- What commands were run.
-- Whether each command passed or failed.
-- Any manual verification performed.
-- Any known limitations or follow-up work.
-
----
-
-# Reviewer Guidance Requirement
-
-Every issue must include a reviewer checklist.
-
-The reviewer checklist should tell the reviewer what to inspect, not just say “review the PR.”
-
-Good reviewer checklist items include:
-
-- Verify that the implementation is limited to the agreed scope.
-- Verify that the behavior matches the issue.
-- Verify that regression tests exist.
-- Verify that risky edge cases are covered.
-- Verify that the PR description includes test results.
-- Verify that no unrelated refactor or cleanup was bundled into the PR.
-
----
-
-# Splitting Work Into Multiple Issues
-
-When the work should be split, create issues in dependency order.
-
-For each issue:
-
-- Make the title specific.
-- Make the issue independently implementable.
-- Make dependencies explicit.
-- Keep the scope narrow.
-- Avoid vague placeholder issues.
-
-When useful, include cross-links after creating the issues.
-
-Example:
+#### Investigation issue
 
 ```markdown
-## Dependencies
+## Question
 
-Depends on:
+## Context
 
-- #123
+## In Scope
 
-Followed by:
+## Out of Scope
 
-- #125
+## Investigation Plan
+
+## Deliverables / Decision Criteria
+
+## Relevant Files / Areas
+
+## Validation
+
+## Dependencies / Follow-Up
+
+## Definition of Done
 ```
 
-If issue numbers are not known until after creation, first create the issues, then update their bodies or add comments with the correct links.
+State that the investigation does not promise a production implementation.
+Require evidence, alternatives considered, the recommended decision, and
+the implementation issue(s) to create next. Require tests only for executable
+artifacts produced by the investigation.
 
-Use `gh issue edit` or `gh issue comment` as appropriate.
+#### Planning or documentation issue
 
----
+Use the implementation template unchanged so both agents can parse it. In
+`## Tests Required`, write `None` and a `No-Test Justification` subsection.
+Keep `## Manual Verification / Self-Check` with applicable documentation or
+planning checks. Explain why the task changes no executable behavior.
 
-# GitHub Issue Creation Procedure
+### 4. Apply the quality gate
 
-When ready to create an issue:
+Before creating or presenting an issue, verify that every issue has:
 
-1. Draft the issue body in a temporary Markdown file.
-2. Create the issue with `gh issue create`.
-3. Apply appropriate labels if the repository uses them.
-4. Record the created issue URL or number.
-5. If multiple issues were created, report all issue numbers and the dependency order to the user.
+- a specific title and one clear goal;
+- the canonical section names when the issue is intended for the implementor
+  and reviewer loops;
+- concrete scope and out of scope;
+- an approach or investigation question appropriate to its type;
+- observable acceptance or decision criteria;
+- named tests or a valid no-test justification;
+- verification steps and dependencies;
+- a developer checklist and requirement traceability;
+- no unresolved choice hidden in an implementation issue;
+- no secrets or unnecessary private data;
+- no duplicate of existing work; and
+- no empty placeholders.
 
-Example:
+If an ambiguity could change behavior, scope, ownership, acceptance, or safe
+reproduction, treat it as blocking and ask the user instead of turning it into
+a confident implementation assumption. If it cannot change those things,
+label it as a non-blocking assumption in the issue body.
 
-```bash
-gh issue create \
-  --title "Clear, specific issue title" \
-  --body-file /tmp/issue-body.md \
-  --label "bug"
-```
+## Create Issues
 
-If labels are unknown, inspect existing labels first:
+Only enter this section in create mode or agent-authorized create mode.
 
-```bash
-gh label list
-```
+Do not publish an investigation issue into this agent integration. Keep it in
+the draft output and ask who owns it unless the user has named another owner
+or workflow. Publish implementation and documentation/planning issues only
+when their dependencies are not blocked by that investigation.
 
-Do not invent labels that do not exist unless the user explicitly asks you to create labels.
+1. Write each final body to a temporary Markdown file to avoid shell escaping
+   problems.
+2. Create issues in dependency order with the verified repository:
 
----
+   ```bash
+   gh issue create --repo OWNER/REPO \
+     --title "Specific title" \
+     --body-file /tmp/issue-body.md
+   ```
 
-# Final Response to User
+   Apply only labels confirmed by `gh label list`.
+3. Record each successful mapping from temporary ID to issue number and URL.
+4. If any creation fails, stop. Report every successful issue, the failed
+   command and error, and a retry plan that checks existing created issues
+   first. Do not claim that the full set was created.
+5. After all issues exist, replace temporary dependency IDs with GitHub issue
+   references using `gh issue edit` or comments.
+6. Verify every created issue with `gh issue view` and confirm its title,
+   body, labels, and dependency links.
 
-After creating the issue or issues, respond with:
+The creation step is complete only when every requested issue has succeeded
+and every created issue has been verified.
 
-1. The issue number and title.
-2. The issue URL.
-3. Whether the work was created as one issue or split into multiple issues.
-4. If split, the recommended implementation order.
-5. Any assumptions or unresolved points that were captured in the issue.
+## Final Response
 
-Keep the final response concise.
+In draft mode, report the proposed issue plan, complete bodies, assumptions,
+and any blocking questions.
 
----
-
-# Important Constraints
-
-- Do not implement the feature or bug fix unless the user explicitly asks.
-- Do not create vague issues.
-- Do not create duplicate issues.
-- Do not include every brainstorming detail from the conversation.
-- Do not leave multiple unresolved implementation choices in an implementation issue.
-- Do not omit testing requirements.
-- Do not omit self-verification requirements.
-- Do not omit reviewer acceptance criteria.
-- Do not mix unrelated work into one issue.
-- Do not claim an issue was created unless `gh issue create` succeeded.
+In create mode or agent-authorized create mode, report each issue number,
+title, URL, type, and dependency order. Also report any partial failure,
+skipped duplicate, redaction, or unresolved assumption. Never claim creation
+without a successful command and verification.

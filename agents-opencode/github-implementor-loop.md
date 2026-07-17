@@ -114,23 +114,29 @@ Important issue sections include:
 * `Chosen Implementation Approach`
 * `Implementation Plan`
 * `Relevant Files / Areas`
+* `Acceptance Criteria`
 * `Tests Required`
 * `Manual Verification / Self-Check`
 * `Reviewer Acceptance Checklist`
 * `Dependencies`
 * `Follow-Up Work`
 * `Definition of Done`
+* `Developer Checklist`
+* `Requirement Traceability`
 
 Before implementing a new issue or modifying an existing PR linked to an issue, read the linked issue and extract:
 
 1. What must be implemented.
 2. What must not be implemented.
 3. The chosen implementation approach.
-4. Required tests.
-5. Required manual verification.
-6. Reviewer acceptance expectations.
-7. Definition of done.
-8. Dependencies and follow-up work.
+4. Acceptance criteria.
+5. Required tests.
+6. Required manual verification.
+7. Reviewer acceptance expectations.
+8. Definition of done.
+9. Dependencies and follow-up work.
+10. Developer checklist.
+11. Requirement traceability.
 
 Do not treat the issue body as background only. Treat it as the acceptance contract for the PR.
 
@@ -560,7 +566,10 @@ However, when the finding is blocking, an explanation alone does not make the PR
 
 When reviewer feedback recommends a follow-up issue and the suggestion is valid but outside the current PR scope, create a follow-up issue using skill `github-create-issue`. 
 
-If the recommended follow-up item is too big or too broad, use skill `breakdown-requirement-into-issues` to break it down and create multiple follow-up issues.
+If the recommended follow-up item is too big or too broad, use skill
+`breakdown-requirement-into-issues` to break it down and create multiple
+follow-up issues. Include the current PR or issue, the bounded follow-up
+scope, and the request to create the resulting issues in the handoff.
 
 The follow-up issue should be clear, scoped, and actionable.
 
@@ -596,6 +605,14 @@ Use the repository's standard issue format when practical:
 ## Follow-Up Work
 
 ## Definition of Done
+
+## Developer Checklist
+
+<!-- Use the issue's checklist when present. -->
+
+## Requirement Traceability
+
+<!-- Use "None" for an ad hoc follow-up without formal requirement IDs. -->
 ```
 
 Link the follow-up issue in a PR reply.
@@ -608,6 +625,14 @@ Handled-Review-Commit: <Review-Commit>
 Handled-Decision: FOLLOW_UP_ISSUE
 Handled-Reason: Created follow-up issue #<issue-number> because the work is valid but outside the current PR scope.
 ```
+
+For multiple follow-up issues, add this field to the handling marker:
+
+```text
+Follow-Up-Issues: #123, #124, #125
+```
+
+Link every created issue in the PR reply.
 
 Do not create vague follow-up issues.
 
@@ -729,9 +754,12 @@ A PR may be automatically merged only if ALL of the following are true.
 
   * Scope.
   * Tests Required.
+  * Acceptance Criteria.
   * Manual Verification / Self-Check.
   * Reviewer Acceptance Checklist.
   * Definition of Done.
+  * Developer Checklist.
+  * Requirement Traceability.
 * The PR does not touch high-risk areas unless the reviewer explicitly explains why auto-merge is still safe.
 * The PR does not contain unresolved unnecessary complexity, speculative abstraction, unnecessary dependencies, or unaddressed Ponytail simplification feedback.
 

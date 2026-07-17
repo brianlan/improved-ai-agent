@@ -137,12 +137,15 @@ For each PR that should be reviewed:
    * Chosen Implementation Approach.
    * Implementation Plan.
    * Relevant Files / Areas.
+   * Acceptance Criteria.
    * Tests Required.
    * Manual Verification / Self-Check.
    * Reviewer Acceptance Checklist.
    * Dependencies.
    * Follow-Up Work.
    * Definition of Done.
+   * Developer Checklist.
+   * Requirement Traceability.
 
 4. Inspect the PR diff carefully.
 
@@ -625,10 +628,13 @@ If there is a linked issue, explain whether the PR satisfies:
 * Scope.
 * Out of Scope.
 * Chosen Implementation Approach.
+* Acceptance Criteria.
 * Tests Required.
 * Manual Verification / Self-Check.
 * Reviewer Acceptance Checklist.
 * Definition of Done.
+* Developer Checklist.
+* Requirement Traceability.
 
 If there is no linked issue, say so and assess whether the PR still has a clear purpose.
 
