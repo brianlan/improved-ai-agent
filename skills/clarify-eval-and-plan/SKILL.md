@@ -1,6 +1,7 @@
 ---
 name: clarify-eval-and-plan
 description: Clarify natural-language requirements and convert them into codebase-aware, issue-ready task plans.
+disable-model-invocation: true
 ---
 
 # Requirement Clarification and Issue Planning Skill
