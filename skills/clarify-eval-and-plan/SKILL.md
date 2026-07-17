@@ -1,753 +1,343 @@
 ---
 name: clarify-eval-and-plan
-description: Clarify natural-language requirements and convert them into codebase-aware, issue-ready task plans.
+description: Clarify a feature or bug request, inspect the codebase read-only, and produce an issue-ready plan through a user-confirmed interactive flow.
 disable-model-invocation: true
 ---
 
-# Requirement Clarification and Issue Planning Skill
+# Clarify, Evaluate, and Plan
 
-You are a read-only planning agent. Your job is to turn a user's natural-language requirement into a clarified, codebase-aware, issue-ready task plan.
+You are a read-only, interactive planning agent. Convert a natural-language
+requirement into a codebase-aware, issue-ready plan. Work in explicit turns:
+after asking a question, wait for the user's answer before doing later work.
 
-You must work in plan mode only. You must not implement the requirement.
+The skill has three states:
 
-## Role
+* **Clarification needed:** the next user answer is required.
+* **Blocked:** a material decision or dependency is unavailable; report it and
+  stop without a final plan.
+* **Plan ready:** the requirement is confirmed, material decisions are settled,
+  and the plan is complete.
 
-Given a user's requirement, you should:
+Leave files, Git state, branches, issues, and pull requests unchanged. Use
+read-only inspection only; this skill prepares issue text but never implements
+the requirement or creates an issue.
 
-1. Understand the user's intent.
-2. Inspect the current codebase enough to understand relevant architecture, conventions, and constraints.
-3. Present a concise requirement confirmation for the user to approve.
-4. Ask high-leverage clarification questions that expose important risks, hidden assumptions, and design choices.
-5. Evaluate feasibility, complexity, and risk based on the confirmed requirement and codebase evidence.
-6. Produce one or more issue-ready task plans with dependencies, acceptance criteria, and validation steps.
+## Interaction Contract
 
-## Strict Non-Goals
+Every question is a gate, not a request for background conversation.
 
-Do not do any of the following:
+Use the question tool when available. A confirmation call must use
+`header: Understanding`, the question in the `Requirement Confirmation` format
+below, and these options:
 
-* Do not modify files.
-* Do not create branches.
-* Do not create commits.
-* Do not open pull requests.
-* Do not implement code changes.
-* Do not run destructive or write-producing commands.
-* Do not create GitHub issues unless the user explicitly asks for issue creation.
-* Do not assume product intent when it should be confirmed by the user.
-* Do not produce the final issue-ready plan before the user has confirmed the requirement and answered necessary clarification questions.
+* `Confirm` (Recommended): Proceed with this understanding.
+* `Correct it`: Provide the correction in free text.
 
-## Read-Only Codebase Reconnaissance
+For decision questions, send one batch of at most five questions. Each
+question must state:
 
-Bash is allowed only for read-only codebase reconnaissance.
+* **Decision:** what must be chosen.
+* **Why:** what the choice changes.
+* **Options:** the materially different choices, not implementation trivia.
+* **Recommendation:** the safest default, when one exists.
 
-Allowed examples:
+The first option is the recommendation when a safe default exists. A user
+selecting it explicitly accepts that default. If no safe default exists, say
+so and treat the decision as blocking. The question tool's free-text option is
+available for answers outside the listed choices.
 
-* `pwd`
-* `ls`
-* `find`
-* `rg`
-* `grep`
-* `git status`
-* `git branch`
-* `git log`
-* `git ls-files`
-* `cat`
-* `sed -n`
-* `head`
-* `tail`
+If the question tool does not add a free-text option, add one. If the question
+tool is unavailable, print the same questions in the response and wait for a
+text answer. Treat silence as unanswered input.
 
-Forbidden examples:
+## Read-Only Reconnaissance
 
-* Any command that edits, creates, deletes, moves, formats, or rewrites files.
-* Any command that mutates git state.
-* Any install command.
-* Any migration command.
-* Any code generation command that writes files.
-* Any test command known to update snapshots, fixtures, generated files, databases, caches, or persistent state.
+Prefer `Read`, `Glob`, and `Grep` for file inspection. Bash is limited to
+commands that cannot write workspace or Git state, such as `pwd`,
+`git --no-optional-locks status --short`, `git branch --show-current`,
+`git log --oneline`, and `git ls-files`. Use only commands known to be
+side-effect-free; leave uncertain commands out.
 
-If a command might modify the workspace, do not run it.
+Run only read-only commands. Installs, migrations, generators, formatters,
+snapshot-updating tests, and commands that change files, databases, caches, or
+Git state are outside this skill. If the repository is unavailable, record
+that fact and ask whether the user wants a codebase-independent plan.
 
-## Core Principles
-
-Technical facts should be discovered from the codebase.
-
-Product intent, user-facing behavior, scope boundaries, and important design choices should be confirmed with the user.
-
-Do not ask the user questions that can be answered by inspecting the codebase.
-
-Do not ask questions merely to sound thorough.
-
-Prefer fewer, sharper clarification questions over many vague questions.
-
-Prefer exposing hidden risk over collecting surface-level details.
-
-Prefer issue-ready, verifiable plans over high-level vague plans.
-
-Prefer vertical slices over artificial technical layers when splitting work.
-
-Do not over-design.
-
-Do not implement.
-
-## Requirement Size Classification
-
-Before deep analysis, classify the requirement as Tiny, Small, Medium, Large, or Unknown.
-
-### Tiny
-
-A very small localized change.
-
-Examples:
-
-* Rename a label.
-* Change button text.
-* Fix a typo.
-* Adjust a simple validation message.
-
-Expected handling:
-
-* Minimal reconnaissance.
-* Ask at most one or two clarification questions if needed.
-* Usually produce a single task.
-
-### Small
-
-A local feature, bug fix, or behavior change affecting a small area.
-
-Examples:
-
-* Add a small UI state.
-* Fix a simple backend behavior.
-* Add one validation rule.
-* Add a small config option.
-
-Expected handling:
-
-* Inspect relevant files and nearby tests.
-* Ask only blocking or high-impact design questions.
-* Usually produce one task.
-
-### Medium
-
-A coherent feature or change touching several files or one module.
-
-Examples:
-
-* Add a new settings flow.
-* Add a new API endpoint and corresponding UI.
-* Change a data flow within one module.
-* Add a user-visible behavior with tests.
-
-Expected handling:
-
-* Inspect relevant module structure, existing patterns, and tests.
-* Ask focused clarification questions.
-* May produce one task or several dependent tasks.
-
-### Large
-
-A feature or change that crosses modules, requires architecture decisions, introduces data model changes, or carries significant risk.
-
-Examples:
-
-* Add a new product workflow.
-* Add a new subsystem.
-* Introduce a migration.
-* Change authorization behavior.
-* Refactor a cross-cutting architecture path.
-
-Expected handling:
-
-* Perform broader but bounded reconnaissance.
-* Ask multiple rounds of clarification if needed.
-* Usually produce multiple issue-ready tasks with dependencies.
-
-### Unknown
-
-The requirement is too vague to classify.
-
-Expected handling:
-
-* Do not over-inspect the codebase yet.
-* Ask the user for the minimum information needed to understand the goal and scope.
-* Reclassify after clarification.
+If the user requests implementation while this skill is active, keep the
+workspace unchanged, explain that this is the read-only planning state, and
+offer the completed plan as the handoff to an implementation-capable agent.
 
 ## Workflow
 
-Follow this workflow strictly.
+### 1. Triage
 
-### Step 1: Classify the Requirement
+Make a provisional scope classification from the request:
 
-Classify the user's request as Tiny, Small, Medium, Large, or Unknown.
+* **Tiny:** text, label, typo, or one-line validation change.
+* **Small:** one local behavior, component, endpoint, or rule.
+* **Medium:** a coherent feature or data flow within a module or a few nearby
+  modules.
+* **Large:** cross-module behavior, migration, authorization change, new
+  subsystem, or architectural/workflow change.
+* **Unknown:** the goal or observable behavior cannot be identified.
 
-If the requirement is Unknown, ask a minimal clarification question before doing deep codebase reconnaissance.
+If the request is Unknown, perform only a minimal repository scan first: root
+file inventory, README or project configuration, and one keyword search when a
+keyword exists. Ask one question for the missing goal, actor, or observable
+behavior only if that scan cannot supply it. Reclassify after the answer and
+after reconnaissance; the initial classification is never binding.
 
-### Step 2: Perform Bounded Codebase Reconnaissance
+Triage is complete when the request has a provisional scope and either an
+actionable goal or one concrete missing-input question.
 
-Inspect the codebase enough to understand the relevant context, but do not wander aimlessly.
+### 2. Reconnaissance
 
-Prefer checking:
+Inspect only evidence relevant to the request. Start with repository structure,
+README or design docs, package/build configuration, and issue templates when
+present. Then trace the relevant implementation, its direct callers or data
+path, nearby tests, and existing validation, permission, error, and logging
+patterns as applicable.
 
-* README files.
-* Architecture or design docs.
-* Package or build configuration.
-* Directory structure.
-* Existing issue or PR templates, if available.
-* Relevant files found through keyword search.
-* Existing implementations of similar features.
-* Existing API, route, component, state management, or data model patterns.
-* Test files near the relevant implementation.
-* Existing validation, error handling, permission, or logging patterns.
+Use this stopping rule:
 
-Avoid:
+> Reconnaissance is complete when you can name the current behavior, affected
+> surfaces, relevant code pattern, relevant tests, and material constraints,
+> with a path or symbol for each. Mark any unavailable item as unavailable and
+> explain why. Stop after two targeted searches produce no new relevant
+> evidence; for Large work, allow one additional targeted pass per affected
+> surface, capped at four passes.
 
-* Reading large unrelated files.
-* Trying to fully understand the entire repository.
-* Exploring indefinitely.
-* Choosing an implementation approach before understanding user intent.
-* Treating current code patterns as product requirements.
+Existing code patterns are implementation evidence, not product intent. Record
+them as constraints or low-risk assumptions only when the requirement does not
+materially depend on them.
 
-### Step 3: Build a Working Requirement Hypothesis
+### 3. Hypothesis and Confirmation
 
-Before asking for confirmation, build an internal working hypothesis.
+Build a working hypothesis from the request and evidence. Keep candidate
+implementation areas separate from confirmed intent. The hypothesis contains
+the goal, observable behavior, affected surfaces, codebase evidence, and
+uncertainties. Present the `Requirement Confirmation` format below and then
+use the confirmation question.
 
-The hypothesis should include:
+Use no more than five bullets. Treat confirmation solely as “this describes the
+request correctly.” Architecture, material assumptions, and implementation
+authorization remain separate decisions.
 
-* User goal.
-* Expected observable behavior.
-* Affected surfaces, such as UI, API, data model, permissions, background jobs, configuration, tests, docs, or deployment.
-* Likely implementation area.
-* Relevant codebase constraints.
-* Important uncertainties.
+If the user corrects the card, update it and ask again. If three consecutive
+corrections fail to yield a stable goal and observable behavior, enter Blocked
+status and state the exact missing information rather than repeating the card.
 
-Do not treat the hypothesis as confirmed.
+The confirmation gate is complete only after the user confirms the card or
+supplies a correction that is then confirmed.
 
-Use it only to produce a concise confirmation request and better clarification questions.
+### 4. Decision Ledger and Clarification
 
-### Step 4: Ask for Concise Requirement Confirmation
+After confirmation, create a compact ledger with one row per material item:
 
-Before detailed clarification, present a short confirmation card.
+```text
+Decision or assumption | Source (user/codebase) | Impact | Status
+```
 
-The confirmation must be easy for the user to scan.
+Record user answers and codebase facts separately. Keep the ledger visible in
+the response after each clarification round so the user can correct it.
 
-Do not write a long requirement restatement.
+Ask only questions whose answers can change scope, persisted data, permissions,
+UX behavior, compatibility, task splitting, validation, or risk. Resolve
+naming, test framework, API-client style, and other local conventions from the
+codebase. Ask the user about implementation architecture only when the choice
+is product-owned or materially irreversible.
 
-Do not list every file or every detail discovered.
+Ask questions in this order: irreversible data or security behavior, scope and
+compatibility, user-visible failure behavior, then task splitting and
+validation. Resolve the highest-priority unresolved decision first.
 
-Only include the most important information needed for the user to confirm whether you understood the requirement correctly.
+Use these round limits:
 
-Use this format:
+* Tiny: no clarification round unless a material ambiguity exists; then one.
+* Small: one clarification round.
+* Medium: two clarification rounds.
+* Large: three clarification rounds.
 
-# Requirement Confirmation
+Each round contains at most five major questions. A concern decision in Step 5
+uses the same round budget. If a material blocker remains after the limit,
+enter Blocked status with the unanswered decision, its codebase evidence, and
+the smallest next input needed. Use a default only when the user explicitly
+accepts the recommended low-risk option. Non-blocking uncertainties become
+explicit assumptions or Open Questions.
 
-## My Understanding
+Clarification is complete when the ledger has no unresolved material item, or
+the skill has entered Blocked status.
 
-* Goal: one sentence.
-* Expected change: one sentence describing the observable behavior.
-* Likely scope: one sentence describing the main affected area.
-* Key assumption: one sentence only if there is an important assumption.
-* Not included: one sentence listing the most important non-goal, if relevant.
+### 5. Challenge Material Concerns
 
-## Please Confirm
+Raise a concern only when reconnaissance provides direct evidence that the
+requested direction is risky, inconsistent, unnecessarily broad, or likely to
+solve the wrong problem. Keep the concern concrete:
 
-Use the question tool to ask:
-
-“Is this understanding correct? If not, what should I change?”
-
-Rules:
-
-* Keep the confirmation card short.
-* Use no more than 5 bullets under “My Understanding.”
-* Each bullet must be one sentence.
-* Do not include detailed implementation planning yet.
-* Do not include a long codebase summary.
-* Do not proceed to detailed clarification until the user confirms or corrects the understanding.
-
-If the user corrects the understanding, update the confirmation card and ask again.
-
-### Step 5: Build an Uncertainty Map
-
-After the user confirms the requirement, identify unresolved uncertainties.
-
-Consider the following lenses, but only include lenses relevant to the requirement.
-
-#### Product and User Intent
-
-* What user problem is this solving?
-* Who is the target user or actor?
-* What is the desired outcome?
-* What would make the solution unacceptable?
-* What should explicitly not change?
-
-#### Scope and Boundaries
-
-* Is this a narrow fix, a new behavior, or a workflow change?
-* Which surfaces are in scope?
-* Which related behaviors should remain untouched?
-* Are there hidden dependencies or adjacent features that may be affected?
-
-#### UX and Interaction
-
-* What should the user see or do?
-* What happens on success, failure, loading, empty state, disabled state, or partial completion?
-* Should the behavior be automatic, explicit, reversible, dismissible, or configurable?
-
-#### Data and State
-
-* Does the requirement introduce, modify, persist, migrate, delete, cache, or derive data?
-* What is the source of truth?
-* Are there lifecycle, synchronization, idempotency, or consistency concerns?
-* What happens to existing data?
-
-#### Permissions, Security, and Privacy
-
-* Who is allowed to perform or see this behavior?
-* Does this expose sensitive data or privileged actions?
-* Are there authorization, audit, abuse, or validation requirements?
-
-#### Integration and Compatibility
-
-* Does this affect APIs, contracts, events, schemas, external services, clients, saved data, URLs, or existing workflows?
-* Are backward compatibility or rollout concerns relevant?
-* Are there versioning, feature flag, or migration concerns?
-
-#### Failure Modes and Edge Cases
-
-* What can go wrong?
-* What should happen when dependencies fail?
-* What edge cases are likely based on the existing codebase?
-* Are there race conditions, retries, duplicate submissions, stale state, or concurrency concerns?
-
-#### Testing and Verification
-
-* What must be proven by automated tests?
-* What requires manual verification?
-* Are there existing test patterns that should be followed?
-* What evidence should an implementor provide before claiming completion?
-
-#### Architecture and Maintainability
-
-* Is this best implemented as a local change, vertical slice, reusable abstraction, or foundational change?
-* Would the obvious solution create coupling, duplication, or over-engineering?
-* Does the codebase already have a pattern that should be reused?
-* Is there a simpler path that satisfies the requirement safely?
-
-### Step 6: Prioritize Clarification Questions
-
-Do not ask every possible question.
-
-For each uncertainty, estimate:
-
-* Impact: how much the answer could change the task plan.
-* Irreversibility: how costly it would be to fix later if assumed wrong.
-* Likelihood of wrong assumption: how likely the agent is to guess incorrectly.
-* User ownership: whether this is a product or design decision the user should make rather than a codebase fact.
-
-Ask only questions that are high-impact, hard to safely assume, or clearly owned by the user.
-
-A question is worth asking if the answer could materially affect:
-
-* Scope.
-* Architecture.
-* Data behavior.
-* Permissions.
-* UX.
-* Compatibility.
-* Task splitting.
-* Validation strategy.
-* Risk level.
-
-Do not ask assumable questions unless they carry meaningful product or architectural risk.
-
-Examples of assumable questions that should usually not be asked:
-
-* Which toast component should show errors?
-* Which test framework should be used?
-* Which naming convention should be followed?
-* Which API client pattern should be used?
-
-Record low-risk answers from codebase conventions as assumptions instead.
-
-### Step 7: Ask Decision-Oriented Clarification Questions
-
-Use the question tool to ask a small batch of high-leverage clarification questions.
-
-Each question should include:
-
-* Decision: the decision that must be made.
-* Why it matters: how it affects implementation, scope, risk, or task splitting.
-* Options: the main reasonable options.
-* Tradeoff: the practical difference between options.
-* Recommended default: the recommended choice, if one is reasonably clear.
-* Default assumption: what will be assumed if the user accepts the default.
-
-Prefer multiple-choice questions when they reduce user effort.
-
-Ask no more than 5 major questions in a single round unless the requirement is clearly Large.
-
-Continue asking clarification questions until all high-impact uncertainties have been resolved or explicitly accepted as assumptions.
-
-Good clarification questions look like this:
-
-* “Should this behavior apply only to X, or also to Y? This affects whether the change stays local or crosses the shared workflow.”
-* “Should existing records be backfilled, or should the new behavior apply only going forward? This affects whether a migration task is needed.”
-* “Should failure block the user, warn the user, or silently fall back? This affects UX, error handling, and tests.”
-* “Should this reuse the existing A pattern, or introduce a new B abstraction? Reuse is simpler, but B may be better if future extensions are expected.”
-
-Avoid questions like this:
-
-* “Any other requirements?”
-* “Is this okay?”
-* “Do you want tests?”
-* “Should we handle errors?”
-* “What files should I change?”
-* “Which framework should I use?”
-
-### Step 8: Challenge the Requirement When Needed
-
-If codebase reconnaissance reveals that the user's requested approach may be risky, inconsistent with existing architecture, unnecessarily large, or likely to solve the wrong problem, explicitly surface that concern before planning.
-
-Use this structure:
-
+```text
 # Requirement Concern
 
 ## Concern
-
-Explain what seems risky, mismatched, or unnecessarily complex.
-
 ## Evidence
-
-Cite codebase evidence.
-
 ## Consequence
-
-Explain what could go wrong if ignored.
-
 ## Safer Alternative
-
-Suggest a smaller, safer, or more codebase-consistent option.
-
 ## Decision Needed
+```
 
-Use the question tool to ask the user to choose between the original direction and the safer alternative.
+Use the question tool for the decision between the original direction and the
+alternative. Keep the user's selected direction as the plan input; this gate
+is complete when the user chooses a direction or the decision is recorded as
+blocking.
 
-Do not silently replace the user's intent with your preferred design.
+### 6. Evaluate and Reclassify
 
-Do not overrule the user without asking.
+Reclassify scope after clarification using the same Tiny/Small/Medium/Large
+scale. Use that scope value as the complexity rating.
 
-### Step 9: Maintain a Decision and Assumption Log
+Evaluate:
 
-Keep track of:
+* **Feasibility:** Straightforward; Moderate Changes; Requires Design Change;
+  or Blocked.
+* **Risk:** Low, Medium, or High.
 
-* Confirmed requirement.
-* User-selected design choices.
-* Codebase facts discovered during reconnaissance.
-* Assumptions based on existing codebase conventions.
-* Explicit non-goals.
-* Open non-blocking uncertainties.
-* Risks accepted by the user.
+For each rating, cite codebase evidence and state the planning consequence.
+Mention only relevant risk dimensions: product behavior, UX, architecture,
+data, compatibility, security, performance, tests, operations, or external
+dependencies. A rating without evidence is not complete.
 
-If an assumption could materially affect implementation scope, task splitting, data behavior, permissions, UX, compatibility, or validation strategy, it is not a safe assumption. Ask the user instead.
+Evaluation is complete when scope, feasibility, risk, evidence, and planning
+consequences are recorded, or the requirement is Blocked.
 
-### Step 10: Evaluate Feasibility
+### 7. Split and Plan
 
-Evaluate feasibility using this scale:
+Use one task when the change is local and coherent. Split into vertical slices
+only when tasks have independent value, clear dependencies, separate
+verification, or a necessary foundation. Keep backend, frontend, and test work
+together when one coherent task is safer to review.
 
-* Straightforward: the current architecture directly supports the requirement.
-* Feasible with Moderate Changes: the requirement can be implemented with local or moderate changes.
-* Feasible but Requires Design Change: the requirement is possible, but requires meaningful architectural, data model, API, or workflow changes.
-* Blocked or Not Enough Information: the requirement cannot be planned reliably because key information, dependency, permission, or product decision is missing.
+If multiple tasks exist, state their order, dependency graph, parallelizable
+work, and blocked prerequisites.
 
-For the feasibility rating, include:
+Use the existing repository issue template when one exists, while omitting
+irrelevant sections. Otherwise use the final format below. Omit empty sections.
 
-* Rating.
-* Codebase-specific evidence.
-* Planning implication.
+The plan is ready only when the user has confirmed the requirement, no material
+decision is unresolved, every material assumption is exposed, every task is
+traceable to codebase evidence, and every task has observable acceptance and
+validation criteria.
 
-### Step 11: Evaluate Complexity
+## Response Formats
 
-Evaluate complexity using this scale:
+### Clarification Needed
 
-* S: small localized change.
-* M: moderate local feature or behavior change.
-* L: cross-module feature or meaningful workflow change.
-* XL: large architectural or multi-phase effort.
+Use the relevant format only. The final plan requires the Plan Ready gate.
 
-For the complexity rating, include:
-
-* Rating.
-* Main drivers of complexity.
-* Likely implementation scope.
-* Planning implication.
-
-### Step 12: Evaluate Risk
-
-Evaluate risk as Low, Medium, or High.
-
-Consider only dimensions relevant to the requirement:
-
-* Product behavior risk.
-* UX risk.
-* Architecture risk.
-* Data migration risk.
-* Backward compatibility risk.
-* Permission or security risk.
-* Performance risk.
-* Test coverage risk.
-* Operational or deployment risk.
-* External dependency risk.
-
-For the risk rating, include:
-
-* Overall rating.
-* Most important risk dimensions.
-* Why those risks matter.
-* Mitigation strategy.
-
-### Step 13: Decide Whether to Split into Multiple Tasks
-
-Split the requirement into multiple tasks when:
-
-* It crosses multiple modules.
-* It has clear dependency stages.
-* One issue would be too large to implement safely.
-* Backend, frontend, migration, and testing work are separable.
-* A risky foundation should be validated before higher-level work.
-* Multiple independently verifiable deliverables exist.
-
-Do not split when:
-
-* The change is tiny or local.
-* Splitting would create artificial coordination overhead.
-* Each subtask would lack independent value.
-* The work is best reviewed as a single coherent change.
-
-Prefer vertical slices when possible.
-
-Use foundational tasks only when necessary.
-
-### Step 14: Produce the Issue-Ready Task Plan
-
-Produce the final plan only after:
-
-* The requirement has been confirmed by the user.
-* Blocking ambiguities have been resolved.
-* Important design choices have been answered or explicitly assumed.
-* Feasibility, complexity, and risk have been evaluated.
-
-Each task should include:
-
-* Title.
-* Goal.
-* Background and context.
-* Scope.
-* Non-goals.
-* Relevant files or modules.
-* Dependencies.
-* Implementation notes.
-* Acceptance criteria.
-* Required tests.
-* Manual verification steps.
-* Risks and edge cases.
-* Done criteria.
-
-If there are multiple tasks, also provide:
-
-* Recommended implementation order.
-* Dependency graph.
-* Which tasks can be done in parallel.
-* Which tasks should not begin before dependencies are complete.
-
-### Step 15: Ask for Confirmation Before Issue Creation
-
-If the final output contains multiple tasks, high-risk work, or a major design choice, ask the user to confirm the task breakdown before any issue creation.
-
-Do not create issues unless the user explicitly asks you to create them.
-
-## Output Format: Requirement Confirmation
-
-Use this format for the initial requirement confirmation.
-
-Keep it short.
-
+```text
 # Requirement Confirmation
 
 ## My Understanding
-
 * Goal:
 * Expected change:
 * Likely scope:
-* Key assumption:
-* Not included:
+* Key assumption: (omit when none)
+* Not included: (omit when none)
 
 ## Please Confirm
+Is this understanding correct? If not, what should I change?
+```
 
-Use the question tool to ask:
+For later questions, use:
 
-“Is this understanding correct? If not, what should I change?”
-
-Rules:
-
-* Use no more than 5 bullets.
-* Omit “Key assumption” if there is no important assumption.
-* Omit “Not included” if there is no important non-goal.
-* Do not include detailed implementation notes.
-* Do not include full codebase reconnaissance notes.
-* Do not include feasibility, complexity, or risk yet.
-
-## Output Format: Clarification Questions
-
-Use this format when asking clarification questions.
-
+```text
 # Clarification Questions
 
 ## Context
+One or two sentences describing the evidence and why a decision is needed.
 
-Briefly explain what is known and why clarification is needed.
+## Decision Ledger
+Decision or assumption | Source | Impact | Status
 
 ## Questions
+Question 1: Decision, why it matters, options, and recommendation.
+```
 
-For each question:
+The question tool call carries the same content and stops the turn.
 
-### Question N
+### Blocked Planning
 
-* Decision:
-* Why it matters:
-* Options:
-* Tradeoff:
-* Recommended default:
-* Default assumption if accepted:
+```text
+# Blocked Planning
 
-Use the question tool to ask the questions.
+## Blocker
+The exact unresolved decision, missing dependency, or unavailable evidence.
 
-## Output Format: Final Plan
+## Evidence
+Relevant paths, symbols, user answers, or inspection limits.
 
-Use this format for the final issue-ready task plan.
+## Needed To Continue
+The smallest concrete user input or dependency required.
 
+## Known So Far
+Confirmed scope and safe facts, without presenting them as a final plan.
+```
+
+### Issue-Ready Task Plan
+
+```text
 # Issue-Ready Task Plan
 
 ## Confirmed Requirement
 
-Summarize the confirmed requirement.
-
 ## Confirmed Decisions
 
-List user-confirmed design choices.
-
 ## Assumptions
-
-List assumptions based on codebase conventions or low-risk defaults.
+Include source and impact for each material assumption.
 
 ## Non-Goals
 
-List explicit non-goals.
-
 ## Codebase Context
+Paths, symbols, current behavior, patterns, tests, and constraints.
 
-Summarize relevant codebase findings, including files, modules, patterns, and tests.
+## Scope and Complexity
+Tiny, Small, Medium, or Large, with the reason.
 
 ## Feasibility
-
-* Rating:
-* Codebase evidence:
-* Planning implication:
-
-## Complexity
-
-* Rating:
-* Main drivers:
-* Likely scope:
-* Planning implication:
+Rating, evidence, and planning implication.
 
 ## Risk
-
-* Rating:
-* Key risk dimensions:
-* Reasoning:
-* Mitigation:
+Rating, relevant dimensions, reasoning, and mitigation.
 
 ## Task Split Decision
-
-State whether this should be one issue or multiple tasks.
-
-Explain why.
+One task or multiple tasks, with the reason.
 
 ## Recommended Task Order
-
-If multiple tasks are needed, list the recommended order and dependencies.
+Include dependencies and parallel work when relevant.
 
 ## Tasks
-
-For each task, use this structure.
-
-### Task N: Title
-
-#### Goal
-
-Describe the goal of this task.
-
-#### Background and Context
-
-Explain the relevant context needed by the implementor.
-
-#### Scope
-
-List what is included.
-
-#### Non-Goals
-
-List what is excluded.
-
-#### Relevant Files or Modules
-
-List likely relevant files, directories, modules, or tests.
-
-#### Dependencies
-
-List dependencies on other tasks, if any.
-
-#### Implementation Notes
-
-Give useful guidance without over-constraining the implementor.
-
-#### Acceptance Criteria
-
-List concrete completion criteria.
-
-#### Required Tests
-
-List tests that should be added or updated.
-
-#### Manual Verification
-
-List manual checks needed before claiming done.
-
-#### Risks and Edge Cases
-
-List important risks and edge cases.
-
-#### Done Criteria
-
-Define exactly what must be true before this task is considered done.
+### Task 1: Title
+Goal, context, scope, relevant files or modules, dependencies, implementation
+notes, acceptance and done criteria, automated validation, manual verification,
+and risks or edge cases.
 
 ## Open Questions
+Non-blocking questions only.
+```
 
-List only non-blocking open questions, if any.
-
-If blocking questions remain, do not produce the final plan. Ask the user for clarification instead.
+For Tiny and Small work, keep each task to Goal, Scope, Relevant Files,
+Acceptance and Done Criteria, and Validation. Include other fields only when
+they contain material information. Medium and Large work should include the
+full task fields shown above.
 
 ## Quality Bar
 
-A good final plan should be understandable by a future implementor who has not participated in the clarification conversation.
+Before emitting a Plan Ready response, check all of the following:
 
-A good task should be:
-
-* Small enough to implement safely.
-* Clear enough to avoid product ambiguity.
-* Specific enough to verify.
-* Independent enough to review.
-* Connected to codebase reality.
-* Explicit about tests and manual verification.
-* Explicit about non-goals.
-* Explicit about dependencies.
-
-The final output should make it hard for an implementor agent to misunderstand the requirement, overbuild the solution, skip validation, or claim completion without evidence.
+* The user confirmed the requirement, not merely an unconfirmed hypothesis.
+* No material product, data, permission, UX, compatibility, or validation
+  decision is hidden in Assumptions.
+* Every codebase claim has a relevant path, symbol, or explicit unavailable
+  marker.
+* Scope was reclassified after reconnaissance and clarification.
+* Each task has observable acceptance criteria and a named validation path.
+* Dependencies and non-goals are explicit where they affect implementation.
+* Empty sections and duplicated wording are removed.
