@@ -72,18 +72,24 @@ In create mode or agent-authorized create mode:
    authentication:
 
    ```bash
-   gh repo view --json nameWithOwner,defaultBranch
+   gh repo view --repo OWNER/REPO --json nameWithOwner,defaultBranch  # explicit target
+   gh repo view --json nameWithOwner,defaultBranch                    # current repo
    gh auth status
    ```
 
+   Run only the repository lookup that matches the request, then use the
+   verified `OWNER/REPO` in every later command.
+
 2. Stop if the repository or authorization cannot be verified. Never guess
    the target repository.
-3. Inspect existing labels with `gh label list`.
-4. Search for duplicates and related work using sanitized issue terms:
+3. Inspect existing labels with `gh label list --repo OWNER/REPO`.
+4. Search for duplicates and related work using sanitized issue terms. Run
+   separate searches for each proposed title and its most specific domain
+   terms, replacing the quoted example with the actual sanitized strings:
 
    ```bash
-   gh issue list --repo OWNER/REPO --state all --search "relevant keywords" --limit 100
-   gh pr list --repo OWNER/REPO --state all --search "relevant keywords" --limit 100
+   gh issue list --repo OWNER/REPO --state all --search "TITLE_OR_DISTINCTIVE_TERMS" --limit 100
+   gh pr list --repo OWNER/REPO --state all --search "TITLE_OR_DISTINCTIVE_TERMS" --limit 100
    ```
 
    If an exact duplicate exists, report it and stop. If related work exists,
@@ -273,9 +279,12 @@ when their dependencies are not blocked by that investigation.
    command and error, and a retry plan that checks existing created issues
    first. Do not claim that the full set was created.
 5. After all issues exist, replace temporary dependency IDs with GitHub issue
-   references using `gh issue edit` or comments.
-6. Verify every created issue with `gh issue view` and confirm its title,
-   body, labels, and dependency links.
+   references using `gh issue edit --repo OWNER/REPO` or comments. If an edit
+   or comment fails, stop and report the created issues, failed command, and
+   retry plan.
+6. Verify every created issue with `gh issue view <number> --repo OWNER/REPO`
+   and confirm its title, body, labels, and dependency links. If verification
+   fails, stop and report the unverified issue instead of claiming completion.
 
 The creation step is complete only when every requested issue has succeeded
 and every created issue has been verified.

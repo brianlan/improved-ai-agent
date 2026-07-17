@@ -240,6 +240,9 @@ If Ponytail feedback says tests or fixtures are over-engineered, simplify them o
 
 # PR Body Requirements
 
+This section is the canonical PR-body contract for both GitHub agent loops.
+The reviewer loop must read and enforce this exact structure.
+
 When opening a PR, include a clear body with the following structure:
 
 ```markdown
@@ -400,7 +403,7 @@ When a review contains `## Ponytail Over-Engineering Review`, read that section 
 
 For COMMENT_ONLY feedback:
 
-* If `Action-Recommended: true`, evaluate it and either implement it, explicitly defer it, or ask for clarification.
+* If `Action-Recommended: true`, evaluate it and either implement it, explicitly defer it, or reply requesting clarification.
 * If `Ponytail-Findings: non_blocking`, evaluate each accepted Ponytail suggestion and either simplify the code or explain why the simplification is not appropriate.
 * If `Follow-Up-Recommended: true`, consider creating a follow-up issue instead of modifying the current PR.
 * If `Action-Recommended: false`, `Follow-Up-Recommended: false`, and `Ponytail-Findings: none`, treat it as informational unless the text clearly requests action.
@@ -488,9 +491,9 @@ When handling reviewer feedback:
 4. Fix the issue if the feedback is valid and in scope.
 5. If the feedback is valid but out of scope, create or recommend a follow-up issue.
 6. If the feedback is incorrect or obsolete, reply with a concise explanation.
-7. If the feedback is ambiguous, ask for clarification.
+7. If the feedback is ambiguous, reply on GitHub requesting clarification.
 8. After changes, run relevant tests and update the PR body or comment with results.
-9. Include a handling marker when useful.
+9. Include a handling marker when useful. If the response only updates PR metadata or the body, also leave a PR comment with the marker so the reviewer has an explicit response event.
 
 Do not ignore reviewer feedback merely because it is COMMENT_ONLY.
 
@@ -573,7 +576,7 @@ scope, and the request to create the resulting issues in the handoff.
 
 The follow-up issue should be clear, scoped, and actionable.
 
-Use the repository's standard issue format when practical:
+Use the repository's standard issue format:
 
 ```markdown
 ## Summary
@@ -594,6 +597,8 @@ Use the repository's standard issue format when practical:
 
 ## Relevant Files / Areas
 
+## Acceptance Criteria
+
 ## Tests Required
 
 ## Manual Verification / Self-Check
@@ -608,11 +613,7 @@ Use the repository's standard issue format when practical:
 
 ## Developer Checklist
 
-<!-- Use the issue's checklist when present. -->
-
 ## Requirement Traceability
-
-<!-- Use "None" for an ad hoc follow-up without formal requirement IDs. -->
 ```
 
 Link the follow-up issue in a PR reply.
@@ -699,11 +700,14 @@ A PR may be automatically merged only if ALL of the following are true.
 ## 2. Reviewer Approval
 
 * There is a latest reviewer-agent review containing `Agent-Review: reviewer`.
+* The review author is not the PR author.
+* The review contains `Reviewer-Model-Signature: <exact model value from the reviewer agent prompt>`.
 * That review has `Review-Decision: APPROVE`.
 * That review has `Merge-Allowed: true`.
 * That review has `Auto-Merge-Allowed: true`.
 * That review contains `Review-Commit: <sha>`.
 * The current PR head SHA exactly equals that `Review-Commit`.
+* The review contains `Ponytail-Review: RUN`.
 * If the review contains `Issue-Alignment`, it must be `Issue-Alignment: SATISFIED` or `Issue-Alignment: NO_LINKED_ISSUE`.
 * If the review contains `Ponytail-Findings`, it must be `Ponytail-Findings: none`.
 * If the review contains `Ponytail-Action-Required`, it must be `Ponytail-Action-Required: false`.
@@ -749,6 +753,7 @@ A PR may be automatically merged only if ALL of the following are true.
 * The PR is small or moderate in scope.
 * The PR has a clear linked issue or clear purpose.
 * The PR body includes a useful summary and test results.
+* The PR body satisfies the canonical PR-body contract above, including the exact `Model-Signature` value.
 * The PR body includes required self-verification evidence.
 * If linked to a structured issue, the PR clearly satisfies:
 
@@ -833,6 +838,8 @@ Handle the highest-priority actionable PR task in this order:
 10. Other unresolved review threads or clearly actionable comments.
 11. PRs that pass every auto-merge gate.
 
+Within the same priority, choose the lowest PR number.
+
 ---
 
 # Priority 1 Handling
@@ -873,7 +880,7 @@ Inside the correct PR worktree when worktree work is needed:
 
    * Implement the requested change if reasonable and safe.
    * Or reply explaining why the requested change is unnecessary, obsolete, incorrect, or unsafe.
-   * Or ask for clarification if the feedback is ambiguous.
+    * Or reply on GitHub requesting clarification if the feedback is ambiguous.
 
 6. If feedback says the PR does not satisfy the issue:
 
@@ -960,7 +967,8 @@ Use `gh` to find one open issue that:
 * Has a clear scope and expected behavior.
 * Has no blocking unresolved dependencies.
 
-Prefer older, clearly scoped issues over vague or newly active issues.
+Prefer older, clearly scoped issues over vague or newly active issues. Within
+the same priority, choose the lowest issue number.
 
 Before claiming an issue:
 
@@ -972,15 +980,19 @@ Before claiming an issue:
 
 If the issue follows the standard issue format, extract:
 
+* Goal / Expected Behavior.
 * Scope.
 * Out of Scope.
 * Chosen Implementation Approach.
 * Implementation Plan.
+* Acceptance Criteria.
 * Tests Required.
 * Manual Verification / Self-Check.
 * Reviewer Acceptance Checklist.
 * Dependencies.
 * Definition of Done.
+* Developer Checklist.
+* Requirement Traceability.
 
 Do not claim an issue that you cannot reasonably satisfy.
 
@@ -990,8 +1002,19 @@ Do not claim an issue that you cannot reasonably satisfy.
 
 When starting a new issue:
 
-1. Claim the issue first, for example by assigning it to yourself if possible or commenting that you are starting work.
-2. Re-check that no linked PR or competing claim appeared after claiming.
+1. Claim the issue first by assigning it to yourself if possible and adding
+   this exact comment marker:
+
+   ```text
+   Agent-Claim: implementor
+   Claimed-Issue: #<issue-number>
+   Claimed-At: <UTC-ISO-8601>
+   ```
+
+   Treat an existing active claim marker, assignee, linked PR, or competing
+   branch as a reason to stop.
+2. Re-check that no linked PR or competing claim appeared after claiming. If
+   another claim appeared, stop and report the race.
 3. Draft a concise implementation plan based on the issue's chosen implementation approach.
 4. Create or reuse the dedicated issue worktree.
 5. Verify correct directory, branch, and clean or expected `git status --short`.
@@ -1001,13 +1024,18 @@ When starting a new issue:
 9. Run relevant validation commands.
 10. Check the implementation against:
 
+    * Goal / Expected Behavior.
     * Scope.
     * Out of Scope.
-    * Goal / Expected Behavior.
+    * Chosen Implementation Approach.
+    * Implementation Plan.
+    * Acceptance Criteria.
     * Tests Required.
     * Manual Verification / Self-Check.
     * Reviewer Acceptance Checklist.
     * Definition of Done.
+    * Developer Checklist.
+    * Requirement Traceability.
 11. Fix related test failures.
 12. Commit the changes with a clear message referencing the issue.
 13. Push the branch.

@@ -78,10 +78,14 @@ If any CI/check is still in progress:
 * Do not begin the code review yet.
 * Do not submit a review yet.
 * Wait for 2 minutes, then check the CI/check status again.
-* Continue waiting in 2-minute intervals until there are no longer any running, queued, pending, waiting, or requested checks.
+* Repeat for at most three wait-and-check intervals per reviewer turn.
+* If checks remain non-terminal after the third interval, stop this turn
+  without submitting a review and report the pending CI state. Retry on the
+  next invocation; never wait indefinitely.
 * Once the checks reach a terminal state, continue the normal review procedure and include the final CI result in the review.
 
-This waiting happens inside the current reviewer loop. Do not skip the PR merely because CI is still running, and do not end the current loop just to wait for CI.
+This waiting happens inside the current reviewer loop. A non-terminal result
+after the bounded wait is a retryable state, not a review decision.
 
 ---
 
@@ -109,7 +113,9 @@ For each PR that should be reviewed:
    Before starting the substantive review, apply the CI Waiting Gate:
 
    * If any check is running, queued, pending, waiting, or requested, wait 2 minutes and then fetch the checks / CI status again.
-   * Repeat this 2-minute wait-and-check cycle until all currently reported checks are in a terminal state.
+   * Repeat this 2-minute wait-and-check cycle at most three times. If checks
+     are still non-terminal, stop this turn without submitting a review and
+     retry on the next invocation.
    * After CI reaches a terminal state, continue the review using the final observed CI status.
 
 2. Find and read the linked issue if available.
@@ -147,7 +153,11 @@ For each PR that should be reviewed:
    * Developer Checklist.
    * Requirement Traceability.
 
-4. Inspect the PR diff carefully.
+4. Inspect the PR diff carefully. Read the canonical PR-body contract in
+   `agents-opencode/github-implementor-loop.md` under `# PR Body Requirements`
+   and verify the PR body uses its exact headings and exact implementor
+   `Model-Signature` value from that file's YAML frontmatter. Treat a missing
+   or malformed body contract as actionable review feedback.
 
    Check:
 
@@ -458,7 +468,7 @@ Use `APPROVE` when:
 * The PR satisfies the linked issue or clearly stated PR goal.
 * There are no blocking correctness, safety, scope, test, or Ponytail issues.
 * Required tests and verification are present, or there is a clear valid reason they are not needed.
-* Ponytail was run successfully or is not relevant for a trivial PR.
+* Ponytail was run successfully.
 * There are no accepted Ponytail findings requiring implementor evaluation.
 * Any remaining comments are minor enough that no action is expected before merge.
 
@@ -476,6 +486,7 @@ Examples of blocking issues:
 * Broken existing behavior.
 * Missing required tests.
 * Missing required self-verification evidence.
+* Missing or malformed canonical PR-body contract, including `Model-Signature`.
 * Security, privacy, permissions, data integrity, or migration risk.
 * Failing required checks.
 * Serious maintainability or architectural issues.
@@ -524,7 +535,7 @@ Set `Auto-Merge-Allowed: true` only when all of the following are true:
 * There are no recommended current-PR improvements.
 * There are no follow-up suggestions that should be created before merge.
 * There are no blocking or non-blocking Ponytail findings that require implementor evaluation.
-* Ponytail was run successfully, or the PR is trivial and there is no meaningful over-engineering risk.
+* Ponytail was run successfully.
 * Checks are passing or there is clear evidence that required checks are passing.
 * The PR is small or moderate in scope.
 * The diff is easy to understand.
@@ -585,7 +596,7 @@ For APPROVE:
 
 * `Issue-Alignment: SATISFIED` if there is a linked issue and the PR satisfies it.
 * `Issue-Alignment: NO_LINKED_ISSUE` if there is no linked issue but the PR is still clearly acceptable.
-* `Ponytail-Review: RUN` unless Ponytail was skipped because the PR is trivial and no over-engineering review is meaningful.
+* `Ponytail-Review: RUN`.
 * `Ponytail-Findings: none`
 * `Ponytail-Action-Required: false`
 * `Action-Required: false`
@@ -596,7 +607,10 @@ For APPROVE:
 
 For REQUEST_CHANGES:
 
-* `Issue-Alignment: PARTIAL` or `NOT_SATISFIED` if there is a linked issue.
+* Set `Issue-Alignment` to `PARTIAL` or `NOT_SATISFIED` when the requested
+  change means the linked issue is incomplete. If the issue scope and behavior
+  are satisfied but a separate test, verification, CI, safety, or merge gate
+  blocks approval, use `Issue-Alignment: SATISFIED`.
 * `Issue-Alignment: NO_LINKED_ISSUE` if the blocking issue is absence of required context.
 * `Ponytail-Findings: blocking` if a blocking Ponytail finding is one of the reasons for the decision.
 * `Ponytail-Action-Required: true` if a blocking Ponytail finding must be addressed.
