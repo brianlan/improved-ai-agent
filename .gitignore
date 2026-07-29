@@ -1,3 +1,4 @@
 *.skill
 .DS_Store
 skills/.system
+skills/lark-*
