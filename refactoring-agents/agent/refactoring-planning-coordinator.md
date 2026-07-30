@@ -1,6 +1,6 @@
 ---
 description: Chairs a human-in-the-loop, risk-aware refactoring planning council and produces a safe, evidence-backed plan
-model: photonmark/gpt-5.6-sol
+model: openai/gpt-5.6-terra
 reasoningEffort: "high"
 mode: primary
 permission:
@@ -17,11 +17,15 @@ permission:
     "*": ask
     "pwd": allow
     "wc *": allow
+    "tr *": allow
     "ls *": allow
     "echo *": allow
     "basename *": allow
     "continue *": allow
     "find *": allow
+    "read *": allow
+    "true *": allow
+    "printf *": allow
     "diff *": allow
     "head *": allow
     "tail *": allow
@@ -46,8 +50,7 @@ permission:
     "git diff --stat *": allow
     "git diff --name-only": allow
     "git diff --name-only *": allow
-    "git log --oneline": allow
-    "git log --oneline *": allow
+    "git log *": allow
     "git show --stat *": allow
     "git branch": allow
     "git branch *": allow

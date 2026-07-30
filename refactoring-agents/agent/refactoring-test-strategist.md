@@ -1,7 +1,7 @@
 ---
 description: Designs verification strategy for behavior-preserving refactoring plans
-model: ollama-cloud/glm-5.2
-reasoningEffort: "high"
+model: openai/gpt-5.6-luna
+reasoningEffort: "xhigh"
 mode: subagent
 permission:
   question: deny
@@ -15,11 +15,15 @@ permission:
     "*": ask
     "pwd": allow
     "wc *": allow
+    "tr *": allow
     "ls *": allow
     "echo *": allow
     "basename *": allow
     "continue *": allow
     "find *": allow
+    "read *": allow
+    "true *": allow
+    "printf *": allow
     "diff *": allow
     "head *": allow
     "tail *": allow
@@ -44,8 +48,7 @@ permission:
     "git diff --stat *": allow
     "git diff --name-only": allow
     "git diff --name-only *": allow
-    "git log --oneline": allow
-    "git log --oneline *": allow
+    "git log *": allow
     "git show --stat *": allow
     "git branch": allow
     "git branch *": allow

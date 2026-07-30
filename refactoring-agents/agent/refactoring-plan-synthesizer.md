@@ -1,6 +1,6 @@
 ---
 description: Synthesizes final refactoring plans from accepted council material only
-model: ollama-cloud/glm-5.2
+model: ollama-cloud/kimi-k2.6
 reasoningEffort: "high"
 mode: subagent
 permission:

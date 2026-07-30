@@ -1,6 +1,6 @@
 ---
 description: Finds local code smells and maintainability refactoring opportunities without changing code
-model: ark-coding-plan/kimi-k2.7-code
+model: ark-coding-plan/glm-5.2
 reasoningEffort: "high"
 mode: subagent
 permission:
@@ -15,11 +15,15 @@ permission:
     "*": ask
     "pwd": allow
     "wc *": allow
+    "tr *": allow
     "ls *": allow
     "echo *": allow
     "basename *": allow
     "continue *": allow
     "find *": allow
+    "read *": allow
+    "true *": allow
+    "printf *": allow
     "diff *": allow
     "head *": allow
     "tail *": allow
@@ -44,8 +48,7 @@ permission:
     "git diff --stat *": allow
     "git diff --name-only": allow
     "git diff --name-only *": allow
-    "git log --oneline": allow
-    "git log --oneline *": allow
+    "git log *": allow
     "git show --stat *": allow
     "git branch": allow
     "git branch *": allow

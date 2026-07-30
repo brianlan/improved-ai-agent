@@ -1,6 +1,6 @@
 ---
 description: Identifies higher-leverage, larger-scope refactoring opportunities that a conservative plan might miss, while staying read-only, evidence-based, and constrained by safety, ROI, and incremental adoption requirements.
-model: photonmark/gpt-5.6-sol
+model: openai/gpt-5.6-terra
 reasoningEffort: "high"
 mode: subagent
 permission:
@@ -15,11 +15,15 @@ permission:
     "*": ask
     "pwd": allow
     "wc *": allow
+    "tr *": allow
     "ls *": allow
     "echo *": allow
     "basename *": allow
     "continue *": allow
     "find *": allow
+    "read *": allow
+    "true *": allow
+    "printf *": allow
     "diff *": allow
     "head *": allow
     "tail *": allow
@@ -44,8 +48,7 @@ permission:
     "git diff --stat *": allow
     "git diff --name-only": allow
     "git diff --name-only *": allow
-    "git log --oneline": allow
-    "git log --oneline *": allow
+    "git log *": allow
     "git show --stat *": allow
     "git branch": allow
     "git branch *": allow
