@@ -21,6 +21,7 @@ permission:
     "/Users/rlan/projects/worktrees/**": allow
     "/home/rlan/projects/worktrees/**": allow
     "/ssd5/datasets/**": allow
+    "/ssd4/envs/**": allow
   task:
     "*": ask
   webfetch: allow
