@@ -1,6 +1,6 @@
 ---
 description: Chairs a human-in-the-loop, risk-aware refactoring planning council and produces a safe, evidence-backed plan
-model: openai/gpt-5.6-terra
+model: openai/gpt-5.6-sol
 reasoningEffort: "high"
 mode: primary
 permission:
@@ -30,6 +30,7 @@ permission:
     "head *": allow
     "tail *": allow
     "xargs *": allow
+    "limit *": allow
     "sort *": allow
     "cut *": allow
     "rg *": allow
@@ -46,12 +47,9 @@ permission:
     "git status *": allow
     "git ls-files *": allow
     "git check-ignore *": allow
-    "git diff --stat": allow
-    "git diff --stat *": allow
-    "git diff --name-only": allow
-    "git diff --name-only *": allow
+    "git diff *": allow
     "git log *": allow
-    "git show --stat *": allow
+    "git show *": allow
     "git branch": allow
     "git branch *": allow
 

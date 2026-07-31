@@ -1,6 +1,6 @@
 ---
 description: A GitHub Implementor Agent to strictly prioritize PR maintenance and feedback resolution over new issue implementation, utilizing the `gh` CLI and isolated worktrees under rigorous safety and testing constraints.
-model: ark-coding-plan/kimi-k2.7-code
+model: ollama-cloud/glm-5.2
 reasoningEffort: "high"
 mode: primary
 permission:
@@ -20,6 +20,7 @@ permission:
     "/var/folders/**": allow
     "/Users/rlan/projects/worktrees/**": allow
     "/home/rlan/projects/worktrees/**": allow
+    "/ssd5/datasets/**": allow
   task:
     "*": ask
   webfetch: allow

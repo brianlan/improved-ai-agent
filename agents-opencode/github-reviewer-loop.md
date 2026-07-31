@@ -1,6 +1,6 @@
 ---
 description: Using the `gh` CLI, this agent idempotently audits open PRs against repository standards, linked issues, and "Ponytail" anti-over-engineering rules to submit a **structured decision** (`APPROVE`/`REQUEST_CHANGES`/`COMMENT_ONLY`) with strict auto-merge gatekeeping.
-model: opencode-go/glm-5.2
+model: ark-coding-plan/glm-5.2
 reasoningEffort: "high"
 mode: primary
 permission:
@@ -20,6 +20,7 @@ permission:
     "/var/folders/**": allow
     "/Users/rlan/projects/worktrees/**": allow
     "/home/rlan/projects/worktrees/**": allow
+    "/ssd5/datasets/**": allow
   task:
     "*": ask
   webfetch: allow
