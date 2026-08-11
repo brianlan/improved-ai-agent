@@ -6,11 +6,11 @@ disable-model-invocation: true
 
 # Reduce Defensive Validation
 
-Surgically simplify defensive control flow that obscures the code's real logic.
+Simplify defensive control flow that obscures the code's real logic.
 
-The goal is **not fewer checks**. The goal is a higher signal-to-noise ratio:
+The goal is **not fewer checks**. The goal is:
 
-> Preserve guards that prevent silent semantic corruption. Remove guards that merely duplicate natural failures, re-prove already-established invariants, or enforce properties the code does not actually depend on.
+> Preserve checks that prevent silent semantic errors. Remove checks that duplicate natural failures, re-prove trusted invariants, or validate state this code does not depend on.
 
 Use these anchors throughout the review:
 
@@ -18,9 +18,9 @@ Use these anchors throughout the review:
 
 > **Validate what you consume, not everything you encounter.**
 
-The user's invocation arguments define the review scope. The scope may be a file, directory, function, class, diff, PR, or other explicitly named code region.
+> **Capability is not contract.**
 
-Modify only that scope. Read adjacent code when necessary to understand contracts and data flow, but do not expand the refactor outside the requested scope unless a minimal adjacent change is strictly required to preserve behavior.
+The user's invocation arguments define the review scope. Read adjacent code as needed to understand data flow and contracts, but keep modifications inside the requested scope unless a minimal adjacent change is strictly necessary.
 
 ## Preservation contract
 
@@ -28,358 +28,269 @@ This is a behavior-preserving refactor.
 
 Preserve:
 
-* normal-path behavior and outputs
-* public function and class interfaces
-* CLI arguments and exit behavior
-* return types and externally visible data structures
-* serialized formats, filenames, directory layouts, and protocols
+* valid-input behavior and outputs
+* accepted-input contracts and schema restrictions
+* public interfaces and return types
+* CLI behavior
+* serialized formats and filesystem layouts
 * externally visible side effects
 * documented or tested error contracts
 * semantic invariants required for correctness
 * cleanup, rollback, recovery, and transaction behavior
 * existing regression coverage
 
-All relevant regression tests must continue to pass.
+Relevant regression tests must continue to pass.
 
-Tests are verification, not the sole justification for keeping or removing a guard. An invariant may still protect against silent corruption even when no test covers it.
+Do not weaken or rewrite tests to accommodate the refactor.
 
-Do not weaken, delete, skip, or rewrite tests merely to make the refactor pass.
+For private/internal code, a custom exception type or message produced only by a redundant pre-check is not automatically part of the contract unless callers, documentation, or tests rely on it.
 
-For private/internal code, an incidental exception type or message produced only by a redundant pre-check is not automatically a stable contract. Treat it as a contract when callers, documentation, or tests rely on it.
+## 1. Understand the responsibility
 
-## Step 1 — Establish scope, happy path, and baseline
+Read the requested scope and enough surrounding code to establish:
 
-Read the requested scope and only the surrounding code necessary to understand:
+* the happy-path behavior
+* what inputs are actually consumed
+* what outputs and side effects are produced
+* which input properties are required for correct output
+* which input forms are intentionally accepted or rejected
+* where untrusted data becomes trusted
+* relevant callers and tests
 
-* what the code is actually trying to accomplish
-* the primary happy-path data flow
-* inputs it consumes
-* outputs and side effects it produces
-* callers and downstream consumers
-* trust boundaries
-* externally visible contracts
-* relevant tests
+Separate **consumed state** from incidental upstream state.
 
-Identify the smallest set of input properties that the code actually relies on to produce correct output.
+Consumed state affects computation, selection, alignment, identity, semantics, serialization, or externally visible behavior.
 
-Distinguish those required properties from incidental properties merely present in the same file, object, archive, directory, message, or data structure.
+Incidental state merely coexists with consumed data, such as unused archive arrays, unrelated metadata, or harmless files that are never selected.
 
-Run relevant existing tests before editing when practical.
+A converter or processing stage should not become a validator for an entire upstream artifact unless complete validation is explicitly part of its responsibility.
 
-Do not perform unrelated:
+### Capability is not contract
 
-* style cleanup
-* architecture redesign
-* typing migrations
-* schema redesign
-* exception redesign
-* performance work
-* dead-code cleanup
-* general refactoring
+Do not remove an explicit schema or accepted-input restriction merely because downstream code could technically process the rejected form.
 
-**Complete when:** the exact review scope, happy path, consumed data, required semantic invariants, externally visible contracts, and relevant tests are understood.
+For example, if one caller intentionally requires:
 
-## Step 2 — Find trust boundaries
+```python
+episodes: list
+```
 
-Trace where untrusted or weakly trusted data becomes trusted.
+while another accepts:
 
-A **trust boundary** is a point where raw data is parsed, normalized, validated, or otherwise given guarantees that downstream code may legitimately rely on.
+```python
+episodes: list | dict
+```
 
-Examples include:
+the fact that both can eventually be iterated does not make the distinction redundant.
 
-* parsing external files
-* configuration loading
-* schema validation
-* protocol decoding
-* construction of a validated domain object
-* a trajectory loader that establishes shape and semantic guarantees
-* an API boundary with explicit preconditions
+Treat deliberate differences in:
+
+* accepted types
+* schema forms
+* required fields
+* modes
+* versions
+* input layouts
+
+as contracts unless analysis shows they are accidental and irrelevant.
+
+**Complete when:** you can state what this code depends on, what it intentionally accepts or rejects, and what upstream state is irrelevant.
+
+## 2. Find trust boundaries
+
+A **trust boundary** is where raw or weakly trusted data receives guarantees that downstream code may rely on: parsing, normalization, schema validation, construction of a validated object, or an equivalent boundary.
 
 For each important invariant, determine:
 
-1. where it is first established
-2. whether downstream code is entitled to rely on it
-3. whether anything can invalidate it before use
+1. where it is established
+2. whether anything can invalidate it before use
 
-Once an invariant is established at a trustworthy boundary and cannot change, downstream internal code should normally rely on it rather than repeatedly re-validating it.
+Once an invariant has been established at a trustworthy boundary and remains valid, internal downstream code should normally rely on it rather than validate it again.
 
-Prefer existing trust boundaries.
+Use existing boundaries. Do not introduce new schemas, classes, validation frameworks, or architecture merely to eliminate checks.
 
-Do not introduce new classes, schemas, validation frameworks, exception hierarchies, or architectural layers merely to create a cleaner-looking trust boundary.
+**Complete when:** repeated checks can be related to an established trust boundary or identified as lacking one.
 
-**Complete when:** each repeated validation under review can be related to an existing trust boundary, or identified as lacking one.
+## 3. Audit defensive control flow
 
-## Step 3 — Identify what the code actually consumes
+Review meaningful defensive constructs such as:
 
-Before evaluating individual guards, determine which data and properties affect the reviewed code's behavior or output.
-
-For each file, mapping, object, archive, directory, record, or message the code reads, distinguish:
-
-### Consumed state
-
-Data directly or indirectly used to:
-
-* compute output
-* select behavior
-* control ordering
-* identify related data
-* preserve alignment
-* determine units, frames, conventions, or semantics
-* serialize results
-* perform externally visible side effects
-
-### Incidental state
-
-Data that happens to coexist with consumed state but does not affect the reviewed code's output or behavior.
-
-Examples:
-
-* unused arrays in an NPZ archive
-* unrelated metadata fields
-* extra files that are never selected
-* extra records outside the requested range
-* optional upstream artifacts ignored by this converter
-* naming conventions on files the code never consumes
-
-A converter, reader, or processing stage should not become a general validator for its entire upstream artifact unless that validation is itself part of its documented responsibility.
-
-**Complete when:** the properties required by the reviewed code are separated from unrelated upstream state.
-
-## Step 4 — Audit defensive control flow
-
-Inspect defensive constructs inside the scope, including where relevant:
-
-* explicit precondition checks
-* `raise`
-* `assert`
+* precondition checks
+* `raise` and `assert`
 * `try` / `except`
-* exception translation and wrapping
-* existence checks
-* `None` checks
-* `isinstance` checks
-* shape checks
-* dtype checks
-* finite-value checks
-* range checks
-* length checks
-* ordering and duplicate checks
-* fallback/default behavior
+* existence and type checks
+* shape, dtype, range, finite-value, length, ordering, and duplicate checks
+* fallback behavior
 * schema checks
-* repeated validation
-* rejection of unused or extra data
+* rejection of extra files, fields, records, or arrays
 
-Do not treat ordinary business branching as defensive validation.
+Do not treat ordinary business branching or deliberate input-contract enforcement as redundant validation.
 
-For every defensive guard that materially affects readability, answer this counterfactual:
+For each significant guard, first ask:
 
-> **If this guard is removed, its assumption is violated, and execution continues from here, what exactly happens?**
+> **Does this code actually depend on the property being checked?**
 
-Trace the real downstream path far enough to establish the answer.
+If yes, ask:
 
-Do not justify a guard with vague statements such as:
+> **If this guard is removed and the property is violated, what exactly happens next?**
 
-* "this is safer"
-* "this catches bad input"
-* "this gives a better error"
-* "defensive programming is good"
-* "the schema says this should not happen"
+Trace the real downstream path. Do not assume that something will eventually fail.
 
-The question is whether this specific code needs the guard.
+Classify the guard using the following categories.
 
-Classify each guard into exactly one of the following categories.
+### SEMANTIC GUARD — keep
 
-## SEMANTIC GUARD — keep
+Without the guard, execution may continue and produce plausible but incorrect results.
 
-Without the guard, invalid data can still flow through the code and produce plausible but incorrect behavior or output.
+Common examples:
 
-Typical examples include:
-
-* wrong units
-* wrong coordinate frame
-* wrong camera or projection model
-* incorrect scale
-* incorrect convention
-* mismatched IDs or episodes
-* RGB/depth/frame misalignment
-* incorrect timestamp ordering when downstream code accepts it
+* wrong units, coordinate frames, scale, or conventions
+* mismatched IDs, frames, images, or trajectories
+* wrong semantic mode or camera model
+* ordering or alignment errors
 * unintended broadcasting
-* silent dtype conversion that changes semantics
-* NaN or Inf values that downstream computation can propagate
+* semantic dtype conversion
+* NaN/Inf propagation
 * structurally valid data carrying the wrong meaning
-* values that satisfy the programming-language type contract but violate the domain contract
 
-These guards protect against **silent corruption** and are high-value.
+These protect against **silent corruption**.
 
-Keep them.
+### CONTRACT GUARD — keep
 
-## LOCALIZATION GUARD — keep only when materially valuable
+The guard intentionally defines which inputs this component accepts, even if downstream operations could technically handle additional forms.
 
-Without the guard, the program will eventually fail, but the natural failure occurs sufficiently far from the root cause or is sufficiently misleading that diagnosis becomes materially harder.
+Examples include:
 
-Do not keep a guard merely because its custom message is nicer.
+* one metadata source must use a list while another may use a mapping
+* only specific schema versions are accepted
+* a mode intentionally requires a particular representation
+* a public or internal API explicitly rejects otherwise-processable input
 
-A localization guard earns its complexity only when it substantially improves one or more of:
+Do not infer redundancy from implementation capability.
 
-* distance from cause to failure
-* ability to identify the offending input
-* ability to identify the violated semantic contract
-* operational diagnosis in production or batch processing
+Remove a contract guard only when surrounding code, documentation, callers, and tests establish that the restriction is accidental rather than intentional.
 
-Prefer the natural failure when it is already:
+### LOCALIZATION GUARD — keep only when it materially helps
 
-* immediate
-* local
-* specific
-* easy to associate with the offending operation
+The program would naturally fail, but much later or with an error substantially disconnected from the real cause.
 
-For internal scripts and data pipelines, a normal Python, NumPy, filesystem, or library exception is often adequate.
+Keep the guard only when it meaningfully improves diagnosis.
 
-## MECHANICAL DUPLICATE — remove candidate
+A nicer custom error message alone is not enough.
 
-The next operation, or an immediately adjacent operation, already rejects the same invalid state clearly and locally.
+If the natural Python, filesystem, NumPy, or library exception is already immediate, local, and understandable, prefer the natural failure.
+
+### MECHANICAL DUPLICATE — remove
+
+The following operation already rejects the same invalid state clearly and locally.
 
 Examples:
 
 ```python
 if not path.is_file():
-    raise ValueError("file is missing")
-
+    raise ValueError("file missing")
 data = np.load(path)
 ```
 
 ```python
 if "pose_world" not in archive:
     raise ValueError("pose_world missing")
-
 pose = archive["pose_world"]
 ```
 
 ```python
 if not directory.is_dir():
     raise ValueError("directory missing")
-
 for path in directory.iterdir():
     ...
 ```
 
-Other common cases include:
+This also includes redundant type or length checks immediately enforced by indexing, unpacking, or the called API.
 
-* checking file existence immediately before opening it
-* checking a mapping key immediately before required indexing
-* checking tuple/list unpacking length immediately before direct unpacking
-* validating a mechanical type immediately before an API that clearly rejects it
-* catching a clear low-level exception only to rephrase the same failure
+### REPEATED INVARIANT — remove or consolidate
 
-Remove these unless a real public error contract requires the custom behavior.
+The same property was already established at a trust boundary, cannot have changed, and is checked again downstream.
 
-## REPEATED INVARIANT — remove or consolidate candidate
+Keep the authoritative check. Let trusted internal code use the established invariant directly.
 
-The invariant was already established at a trustworthy boundary, nothing can invalidate it before this point, and downstream code checks it again.
-
-Examples:
+Example:
 
 ```text
-load trajectory
+trajectory loader
     ↓
-validate finite pose and velocity
+validates pose/velocity are finite
     ↓
-pass trusted trajectory internally
+trusted trajectory
     ↓
-check the same values are finite again
+derive ego pose using finite arithmetic
+    ↓
+validate ego pose is finite again
 ```
 
-or:
+The downstream check is normally redundant unless an intervening operation can independently introduce invalid values.
 
-```text
-validate camera profile
-    ↓
-derive calibration
-    ↓
-helper validates the same model/resolution again
-```
+### IRRELEVANT INVARIANT — remove
 
-Keep the authoritative check at the strongest useful trust boundary.
-
-Let trusted internal code rely on established invariants.
-
-Do not repeatedly re-prove the same fact simply because the data crosses helper-function boundaries.
-
-## IRRELEVANT INVARIANT — remove candidate
-
-The guard enforces a property that the reviewed code does not depend on for correct behavior or output.
-
-Violating the property does not affect the subset of data actually consumed by the code.
-
-Examples:
-
-### Unused archive contents
-
-The converter consumes:
-
-```text
-time_s
-pose_world
-velocity_world_mps
-yaw_rate_radps
-```
-
-but validates the dimensions of every other array stored in the same archive.
-
-Those unrelated arrays are not this converter's responsibility.
-
-### Harmless extra files
-
-The code requires frame files:
-
-```text
-0, 1, 2, 3
-```
-
-and all four are present.
-
-An additional file:
-
-```text
-episode_000001_backup.jpg
-```
-
-does not participate in selection, indexing, or output.
-
-Rejecting the episode merely because that unrelated file exists is unnecessary unless directory exclusivity is part of the converter's actual contract.
-
-### Harmless extra records
-
-The code consumes records for a known set of IDs but rejects unrelated extra records that cannot influence the selected data.
-
-### Unused metadata
-
-The code validates metadata fields that are never read and cannot affect interpretation of fields that are read.
+The guard validates a property this code does not depend on.
 
 Apply this test:
 
-> **If this property changes while every value actually consumed by this code remains unchanged, can this code's behavior or output change?**
+> **If this property changed while every value actually consumed by this code remained identical, could this code's behavior or output change?**
 
-If the answer is no, the invariant is probably irrelevant to this scope.
+If not, the property is normally outside this component's responsibility.
 
-Remove the guard unless this component is explicitly responsible for validating the complete upstream artifact.
+Typical examples:
 
-This category is especially important in converters and pipeline stages: avoid unnecessary coupling to upstream implementation details.
+* validating unused arrays in an archive
+* validating unused metadata
+* rejecting unrelated files that are never selected
+* enforcing upstream formatting that cannot affect consumed data
 
-## UNCERTAIN — preserve
+Be careful with apparently extra data. Extra state is irrelevant only when it cannot indicate a semantic mismatch.
 
-If static reasoning cannot establish the consequence of removal with sufficient confidence, preserve the guard.
+An unrelated backup file may be harmless, while an unexpected additional numbered frame may indicate stale or mismatched rendered data.
 
-Investigate callers, tests, schemas, and downstream usage when that can resolve the uncertainty cheaply.
+### UNCERTAIN — preserve
 
-Do not delete a guard merely because it looks verbose.
+If the consequence of removal cannot be established confidently, preserve the guard.
 
-Uncertainty is not evidence of redundancy.
+Inspect nearby callers, tests, schemas, and downstream usage when they can resolve the uncertainty cheaply.
 
-**Complete when:** every defensive construct that materially obscures the happy path has been classified, every removal candidate has a concrete justification, and irrelevant upstream properties have been explicitly considered.
+**Complete when:** every defensive construct that materially obscures the happy path has a concrete classification and every removal candidate has a traced justification.
 
-## Step 5 — Perform the surgical refactor
+## 4. Sweep downstream from trust boundaries
 
-Modify guards classified as:
+After the local guard-by-guard audit, make one dedicated pass from each trust boundary through its downstream uses.
+
+For every invariant established at the boundary, ask:
+
+> **Where is this same fact checked again before anything could have invalidated it?**
+
+Look specifically for repeated:
+
+* shape checks
+* finite-value checks
+* type checks
+* range checks
+* schema checks
+* identity/alignment checks
+* normalized-value checks
+
+Do not require textual duplication. A downstream check may re-prove the same invariant indirectly after transformations that preserve it.
+
+Remove the downstream check when:
+
+1. the source invariant was already established,
+2. intervening operations preserve it, and
+3. no new failure mode is introduced.
+
+Preserve checks after operations that can independently violate the invariant.
+
+**Complete when:** each trusted invariant has been followed downstream far enough to identify redundant re-validation.
+
+## 5. Refactor surgically
+
+Modify only:
 
 * `MECHANICAL DUPLICATE`
 * `REPEATED INVARIANT`
@@ -388,235 +299,154 @@ Modify guards classified as:
 Preserve:
 
 * `SEMANTIC GUARD`
+* `CONTRACT GUARD`
 * justified `LOCALIZATION GUARD`
 * `UNCERTAIN`
 
-Prefer deletion over replacement.
+Prefer deletion and direct code over replacement abstractions.
 
-Prefer direct code over new abstractions.
-
-When removing a mechanical duplicate:
-
-```text
-pre-check
-↓
-operation
-```
-
-prefer:
-
-```text
-operation
-```
-
-when the operation already provides a clear local failure.
-
-When removing repeated validation:
+Prefer:
 
 ```text
 validate at trust boundary
-↓
+        ↓
 trusted internal data
+        ↓
+use directly
+```
+
+over:
+
+```text
+validate
+↓
+pass to helper
+↓
+validate again
+↓
+pass to helper
 ↓
 validate again
 ```
 
-prefer:
+Prefer loading and validating only consumed state when possible:
 
-```text
-validate at trust boundary
-↓
-trusted internal data
-↓
-use directly
+```python
+required = ("time_s", "pose_world", "velocity_world_mps", "yaw_rate_radps")
+arrays = {key: np.asarray(archive[key]) for key in required}
 ```
 
-When removing irrelevant validation:
+rather than loading an entire artifact and policing unrelated contents.
 
-```text
-load artifact
-↓
-validate consumed fields
-↓
-validate unrelated fields
-↓
-use consumed fields
-```
+### Exception handling
 
-prefer:
-
-```text
-load artifact
-↓
-validate only semantic requirements of consumed fields
-↓
-use them
-```
-
-## Extra-data principle
-
-Be especially careful with checks for:
-
-* extra files
-* extra keys
-* extra arrays
-* extra records
-* extra frames
-* extra metadata
-
-Distinguish **missing required data** from **harmless additional data**.
-
-For example:
-
-```text
-expected frames = {0, 1, 2, 3}
-actual frames   = {0, 1, 2}
-```
-
-is normally a correctness problem because required consumed data is missing.
-
-But:
-
-```text
-expected frames = {0, 1, 2, 3}
-actual frames   = {0, 1, 2, 3, 4}
-```
-
-is not automatically a correctness problem.
-
-If frame `4` is ignored and cannot affect selection, alignment, ordering, or output, rejecting it may be unnecessary over-validation.
-
-Require exact equality only when exact exclusivity itself is a semantic contract.
-
-## Exception-handling principle
-
-Review `try` / `except` according to behavior, not syntax.
-
-Preserve handlers that provide functional behavior such as:
+Preserve `try` / `except` that provides real behavior:
 
 * cleanup
 * rollback
-* resource release
 * retry
 * recovery
+* resource release
 * transaction semantics
-* required public-boundary error translation
-* attaching materially useful context unavailable from the underlying exception
+* required error translation
+* materially useful diagnostic context
 
-A handler is a simplification candidate when it only:
+Simplify handlers that merely catch an already-clear exception and restate the same failure.
 
-* catches an already clear exception
-* changes its type without contractual need
-* restates the same failure
-* adds generic context such as "processing failed" while preserving no useful recovery behavior
+### Extra data
 
-Do not remove `try` / `finally` or equivalent structures that protect resource or transactional correctness merely to reduce visual complexity.
+Distinguish **missing required data** from **additional data**.
 
-## Do not optimize validation counts
+Missing consumed data is normally an error.
 
-Do not use any of these as success metrics:
+Additional data is an error only when:
 
-* number of `raise` statements
-* number of `if` statements
-* number of `assert` statements
-* number of `try` blocks
-* total lines removed
-* percentage of validation deleted
+* exclusivity itself is part of the contract, or
+* the extra data is evidence of inconsistency, misalignment, stale artifacts, or incorrect provenance.
 
-A file with many genuine semantic boundaries may legitimately contain many guards.
+Do not enforce exact equality merely because an upstream format happens to be exact.
 
-A file with five guards may still be over-defensive if all five enforce irrelevant state.
+## 6. Review the happy path
 
-Optimize for:
+After editing, reread the modified functions as program logic rather than as a validation audit.
 
-> **maximum semantic protection with minimum interference in the happy path.**
-
-The remaining checks should be meaningful enough that a reader can assume:
-
-> "If this code stops here, continuing would risk semantic correctness, not merely violate an upstream preference."
-
-## Step 6 — Inspect the resulting happy path
-
-After editing, read the modified functions again as normal program logic rather than as a validation audit.
-
-Check whether the primary behavior is now visually apparent.
-
-A reader should be able to understand:
+The main behavior should be visually easy to follow:
 
 ```text
-input
-↓
+read
+  ↓
 transform
-↓
+  ↓
 compute
-↓
+  ↓
 write
 ```
 
-without repeatedly crossing low-value defensive branches.
+Defensive branches should remain where continuing would risk semantic correctness, violate an intentional contract, or where a materially better failure boundary is justified.
 
-Do not remove meaningful guards merely to make the function aesthetically linear.
+Do not remove meaningful checks merely to make the code look linear.
 
-The objective is for exceptional code to remain proportional to the exceptional risks this component actually owns.
+**Complete when:** the functional story is easier to read and every prominent remaining guard earns its place.
 
-**Complete when:** the code's main functional story is easier to follow and every remaining prominent guard protects a meaningful responsibility of this component.
+## 7. Verify
 
-## Step 7 — Verify behavior preservation
+Run the relevant regression tests.
 
-Run the relevant regression tests after the refactor.
+Inspect the final diff and verify:
 
-Also inspect the final diff and verify:
+1. valid-input behavior and outputs are unchanged
+2. accepted-input contracts have not been unintentionally broadened or narrowed
+3. public interfaces are unchanged
+4. serialized and filesystem outputs are unchanged
+5. no silent-corruption guard was removed
+6. cleanup, rollback, recovery, and transaction behavior remain intact
+7. trusted invariants cannot become invalid between validation and use
+8. removed irrelevant checks truly governed state this code does not consume
+9. tests were not weakened
+10. no unrelated refactoring entered the diff
+11. changes remain within scope
 
-1. valid inputs follow the same functional behavior
-2. valid inputs produce the same externally observable outputs
-3. public interfaces have not changed
-4. CLI behavior has not changed
-5. serialized formats and filesystem layouts have not changed
-6. no semantic guard against silent corruption was removed
-7. no cleanup, rollback, recovery, or transaction behavior was removed
-8. no trusted invariant can be invalidated between its remaining validation point and use
-9. removed irrelevant checks truly governed data the code does not consume
-10. tests were not weakened to accommodate the changes
-11. no unrelated refactoring entered the diff
-12. changes remain inside the requested scope except for strictly necessary preservation edits
+Pay particular attention to deleted checks that previously rejected an input.
 
-When removing a guard changes invalid-input behavior, determine whether the previous behavior was:
+Ask:
 
-* a documented/tested contract
-* relied upon by callers
-* or merely incidental defensive behavior
+> **Did this change only how invalid input fails, or did it make previously rejected input proceed successfully?**
 
-Restore the guard if contractual behavior changed.
+The first may be acceptable for a redundant private pre-check.
 
-Do not restore it merely because a natural underlying exception now replaces a redundant custom exception in internal code.
+The second changes the accepted-input domain and requires evidence that the old restriction was not contractual.
 
-**Complete when:** relevant regression tests pass and every edited guard satisfies the preservation contract.
+Restore the guard when that evidence is absent.
 
-## Step 8 — Report concisely
+**Complete when:** relevant regression tests pass and the preservation contract holds.
 
-Report:
+## Report
+
+Report concisely:
 
 * scope reviewed
-* important semantic guards retained
-* mechanical duplicates removed
-* repeated invariants consolidated
-* irrelevant invariants removed
-* uncertain checks deliberately preserved
+* semantic and contract guards retained
+* redundant or repeated validation removed
+* irrelevant validation removed
+* uncertain guards deliberately preserved
 * tests or verification performed
 
-Call out any intentionally preserved defensive code that may superficially look redundant but protects against silent corruption.
-
-Do not enumerate every untouched `if` or `raise`.
+Do not enumerate every untouched check.
 
 ## Decision model
-
-Use this decision path for each significant guard:
 
 ```text
 What property does this guard enforce?
         |
         v
-Does this code actually depend on that property?
+Is it an intentional accepted-input contract?
+        |
+        +-- Yes -> CONTRACT GUARD
+        |
+        +-- No / not established
+                |
+                v
+Does this code depend on the property?
         |
         +-- No
         |    -> IRRELEVANT INVARIANT
@@ -624,102 +454,39 @@ Does this code actually depend on that property?
         +-- Yes
              |
              v
-If the guard is removed and the property is violated,
-what happens next?
+What happens without the guard?
              |
-             +-- Execution continues with plausible wrong result
+             +-- Plausible wrong result
              |       -> SEMANTIC GUARD
              |
-             +-- Failure occurs much later or misleadingly
+             +-- Much later / misleading failure
              |       -> LOCALIZATION GUARD
              |
              +-- Immediate clear local failure
              |       -> MECHANICAL DUPLICATE
              |
-             +-- Property is already guaranteed by a trust boundary
+             +-- Already guaranteed and unchanged
              |       -> REPEATED INVARIANT
              |
-             +-- Consequence cannot be established confidently
+             +-- Cannot determine confidently
                      -> UNCERTAIN
 ```
 
-For extra data, apply one additional question:
+## Success criterion
 
-```text
-If the extra data disappeared or changed,
-while all consumed data stayed identical,
-could this code's output change?
-        |
-        +-- No  -> probably irrelevant
-        |
-        +-- Yes -> determine the semantic dependency
-```
+Do not optimize:
 
-## Review heuristics
+* number of `raise` statements
+* number of `if` statements
+* number of `try` blocks
+* lines removed
+* percentage of validation deleted
 
-Use these heuristics as prompts for investigation, not automatic rewrite rules.
+Optimize for:
 
-### High-value guards often protect
+> **Maximum semantic and contractual protection with minimum interference in the happy path.**
 
-* units
-* coordinate systems
-* geometric conventions
-* semantic modes
-* scale
-* alignment
-* ordering
-* identity relationships
-* assumptions NumPy/PyTorch may silently broadcast
-* NaN/Inf propagation
-* schema ambiguity that downstream code cannot distinguish
-* irreversible output corruption
+The target is not validation-free code.
 
-### Low-value guards often protect
+The target is code where each remaining defensive branch earns its place.
 
-* missing files immediately before opening them
-* missing keys immediately before required indexing
-* types immediately rejected by the called API
-* lengths immediately enforced by unpacking
-* repeated finite/shape checks on immutable trusted data
-* every field in an upstream artifact when only a subset is consumed
-* harmless extra files or records
-* formatting preferences irrelevant to selected data
-* generic exception rewording
-
-These lists are evidence hints only. Always trace the actual code path.
-
-## Non-goals
-
-This skill is not:
-
-* a general refactoring skill
-* a style cleanup pass
-* a request to minimize validation count
-* a type-system migration
-* a schema redesign
-* an exception-hierarchy redesign
-* a validation-framework migration
-* an architecture cleanup
-* a broad API redesign
-* a performance optimization task
-* a test simplification task
-* an opportunity for speculative abstraction
-
-Prefer a small diff that removes only proven low-value defensive code over a broader redesign that happens to look cleaner.
-
-## Completion standard
-
-The refactor is successful when:
-
-* the happy path is materially easier to read
-* required semantic invariants remain protected
-* silent corruption risks are not weakened
-* mechanical duplicate checks are reduced
-* repeated invariants are trusted after their boundary
-* unrelated upstream state is no longer unnecessarily policed
-* interfaces and valid-input behavior remain unchanged
-* relevant regression tests pass
-
-The target state is not validation-free code.
-
-The target state is code where each remaining defensive branch earns its place.
