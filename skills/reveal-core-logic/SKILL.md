@@ -1,278 +1,383 @@
 ---
+
 name: reveal-core-logic
-description: Refactor existing code so its core workflow is directly visible and unfolds through coherent levels of abstraction.
+description: Refactor existing code so its core workflow is immediately visible and its implementation unfolds through coherent levels of abstraction.
 disable-model-invocation: true
----
+------------------------------
 
 # Reveal Core Logic
 
-Refactor the target code so a reader can understand its **core narrative before its implementation details**.
+Refactor existing code so a reader encounters the **core narrative before implementation detail**.
 
-Preserve observable behavior, public interfaces, data formats, and correctness constraints.
+Preserve observable behavior, interfaces, data formats, and correctness constraints.
 
-Spend restructuring effort first on the normal successful workflow. Keep supporting concerns stable unless moving them is necessary to expose that workflow.
+This skill is about structural readability. Concentrate restructuring effort on making the normal successful workflow legible. Keep supporting concerns stable unless moving them is necessary to expose that workflow.
 
-Use `$ARGUMENTS` to determine the requested scope. If the scope is not explicit, focus on the code currently being worked on rather than expanding into unrelated parts of the repository.
+Use `$ARGUMENTS` to determine scope. If scope is not explicit, focus on the code currently being worked on rather than expanding into unrelated parts of the repository.
 
 ## Leading concepts
 
-Use these concepts consistently while working:
+Use these concepts consistently while working.
 
-* **Core narrative** — the smallest sequence of meaningful operations that explains what the code does from input to output.
-* **Happy path** — the normal successful workflow that should dominate the top-level reading experience.
-* **Semantic altitude** — the conceptual level at which a statement operates. High-altitude statements describe workflow or domain operations; lower-altitude statements describe the mechanics used to implement them.
-* **Progressive disclosure** — organize code so the reader understands the workflow first, then expands one operation at a time to reveal increasingly detailed implementation.
-* **Semantic compression** — a helper boundary earns its existence when its name communicates the meaning of several implementation details at once.
+### Core narrative
 
-## Process
+The smallest sequence of meaningful operations that explains what the code accomplishes from initiation to outcome.
 
-### 1. Reconstruct the core narrative
+It describes the important **verbs** of the system, not the mechanics used to implement them.
 
-Read enough surrounding code to understand the actual successful workflow before restructuring it.
+### Happy path
+
+The normal successful workflow.
+
+The happy path should dominate the reading experience at orchestration levels. Supporting branches may remain nearby when they belong there, but they should not obscure what normally happens.
+
+### Semantic altitude
+
+The conceptual level at which a statement operates.
+
+Higher-altitude statements describe workflow, responsibilities, or meaningful transformations.
+
+Lower-altitude statements describe how those operations are realized: representation handling, indexing, formatting, serialization, protocol details, local bookkeeping, primitive computations, or similar mechanics.
+
+### Progressive disclosure
+
+Code should reveal itself in useful layers:
+
+```text
+purpose
+    ↓
+major workflow
+    ↓
+one stage's workflow
+    ↓
+implementation mechanics
+```
+
+Expanding one operation should reveal the next useful level of understanding, rather than an arbitrary collection of details.
+
+### Semantic compression
+
+A helper or abstraction earns its existence when its name expresses the meaning of several implementation details as one useful concept.
+
+Extraction that merely shortens a function without adding meaning is not semantic compression.
+
+---
+
+# Process
+
+## 1. Reconstruct the core narrative
+
+Read enough surrounding code to understand what the implementation actually does before changing its structure.
 
 Identify:
 
-* the main entry point or orchestration path;
-* the primary entity or data moving through the workflow;
-* the major stages or transformations;
-* the important outputs or side effects.
+* where the relevant workflow begins;
+* what meaningful entities or information move through it;
+* the major operations or transformations;
+* where meaningful outcomes or side effects occur;
+* what constitutes the normal successful path.
 
-Express the workflow as a short sequence of meaningful operations.
+Express the result internally as a short ordered sequence of verbs.
 
-For example:
+For example, the level of description should resemble:
 
 ```text
-select scenes
-→ load one scene
-→ convert eligible episodes
-→ write each converted scene
-→ report results
+receive → interpret → decide → execute → publish
 ```
 
-Prefer domain and workflow language.
+rather than:
 
-Representation details such as filenames, dictionary keys, indexing, serialization, temporary variables, array manipulation, path construction, and bookkeeping belong in the narrative only when they are themselves central to the program's purpose.
+```text
+read field → build string → index map → call helper → write bytes
+```
 
-**Completion criterion:** you can state the main successful workflow as a short sequence of meaningful operations without relying on unrelated implementation mechanics.
+The exact verbs depend on the program. Do not force the workflow into a predefined architecture.
 
-### 2. Align the narrative with the code structure
+Distinguish **core operations** from details that merely implement those operations.
 
-Compare the reconstructed core narrative with the actual orchestration structure.
+### Completion criterion
 
-For every major operation in the narrative, locate where that operation appears in the code.
+This step is complete only when you can state a short core narrative in which every operation:
 
-A major narrative operation should normally be visible as one of:
+1. represents meaningful progress toward the program's outcome;
+2. can be understood without explaining unrelated implementation mechanics; and
+3. is important enough that hiding it would make the workflow materially harder to understand.
+
+---
+
+## 2. Map the narrative onto the code structure
+
+Compare the reconstructed core narrative with the existing orchestration structure.
+
+For each major operation in the narrative, locate where that operation is visible in the code.
+
+A core operation may already appear as:
 
 * a clearly named function call;
-* a clearly named method call;
-* a short and already self-explanatory inline operation.
+* a compact, self-explanatory block;
+* a method or operation on an existing abstraction;
+* another structural unit appropriate to the language and codebase.
 
-When an important narrative verb is implemented only as a long mixture of representation details, path construction, bookkeeping, condition handling, or lower-level mechanics, the operation is still hidden.
+The goal is **narrative–structure alignment**:
 
-For example, if the narrative contains:
+> The important verbs in the reader's mental model should be recognizable in the code's visible structure.
 
-```text
-convert episode
-```
+When an important narrative operation is currently spread across many lower-level statements, restructure it so the operation itself becomes visible.
 
-but the orchestration code contains only:
+When several narrative operations are fused into one opaque operation, expose the distinctions that matter for understanding the workflow.
 
-```python
-episode = int(record["episode_index"])
-filename = f"episode_{episode:06d}.npz"
-path = root / filename
-trajectory = load_trajectory(path, ...)
-frame_ids = ...
-cameras = ...
-write_episode(...)
-```
+Keep an operation inline when its implementation is already compact and clearer than introducing another level of indirection.
 
-then `convert episode` has not yet become visible in the structure.
+### Completion criterion
 
-Create a meaningful boundary when doing so makes that missing narrative operation explicit.
+This step is complete only when every major operation from the core narrative can be pointed to in the orchestration structure without reconstructing it from scattered implementation details.
 
-Prefer the smallest boundary that exposes the missing meaning.
+A reader should not need to infer a major workflow step from filenames, field manipulation, temporary variables, primitive control flow, or bookkeeping when that step has a meaningful conceptual identity of its own.
 
-**Completion criterion:** every major operation in the core narrative has a recognizable counterpart in the orchestration structure, and no major narrative step remains hidden inside a long collection of lower-level statements.
+---
 
-### 3. Expose the happy path
+## 3. Expose the happy path
 
-Restructure orchestration functions so the normal successful workflow is visually dominant.
+Restructure the highest relevant orchestration layer so the normal successful workflow reads as a coherent sequence.
 
-A reader should be able to start at the entry point and follow the main path through a small number of meaningful operations.
+Prefer statements whose names describe **what happens next**.
 
-For example:
+Implementation mechanics should appear only when they are genuinely part of the meaning at that level.
 
-```python
-def convert_scene(...):
-    source = load_scene(...)
-    episodes = select_convertible_episodes(source)
+Use semantic compression to move distracting detail one level down when a meaningful operation can represent it.
 
-    for episode in episodes:
-        convert_episode(source, episode, ...)
-```
+Preserve locally obvious code when hiding it would make the reader chase a helper for no gain.
 
-The orchestration layer should primarily answer:
+The target is not a particular function length. A longer function with one coherent narrative can be clearer than a shorter function assembled from weak abstractions.
 
-> What happens next?
+### Completion criterion
 
-Implementation helpers should answer:
+Reading only the highest relevant orchestration layer should be sufficient to answer:
 
-> How does this step work?
+* What happens first?
+* What are the major stages?
+* What is repeatedly processed or acted upon, if anything?
+* What meaningful result or effect does the workflow produce?
 
-Move implementation detail behind a named operation when the new boundary performs semantic compression.
+The answers should come primarily from visible operations, not from reverse-engineering implementation details.
 
-Keep locally readable detail inline when extracting it would merely replace obvious code with another name the reader must chase.
+---
 
-**Completion criterion:** reading only the orchestration path is sufficient to explain the normal successful workflow and its major stages.
+## 4. Check repeated orchestration
 
-### 4. Keep orchestration at a coherent semantic altitude
+Pay special attention to any structure that repeatedly performs a meaningful unit of work, including:
 
-Review every orchestration function changed during the refactoring.
+* loops;
+* batches;
+* dispatch tables;
+* request or message handlers;
+* pipelines;
+* recursive traversal;
+* callbacks;
+* task execution;
+* state-machine transitions;
+* other repeated or delegated workflows.
 
-Its major statements should operate at approximately the semantic altitude implied by that function's purpose.
-
-A workflow-level function might read:
-
-```python
-source = load_source(...)
-items = select_items(source)
-
-for item in items:
-    convert_item(source, item)
-```
-
-A mixed-altitude version might read:
-
-```python
-source = load_source(...)
-
-for record in source.records:
-    item_id = int(record["item_index"])
-    filename = f"item_{item_id:06d}.npz"
-    path = root / filename
-    convert_item(source, item_id)
-```
-
-The second version repeatedly drops from workflow meaning into representation mechanics and then climbs back up.
-
-When a lower-altitude block interrupts a higher-altitude narrative, move that block one level down behind a meaningful operation.
-
-When a helper adds indirection without revealing meaning, keep or return the detail to the level where it is easiest to understand.
-
-**Completion criterion:** the major statements in every changed orchestration function operate at a coherent semantic altitude, and transitions to lower-level detail happen through meaningful named operations.
-
-### 5. Inspect every major loop
-
-Major loops often contain the real workflow even when the enclosing function looks clean.
-
-For each significant loop in an orchestration function, read the loop body as its own narrative.
+The body of such a structure often contains a hidden narrative of its own.
 
 Ask:
 
-> What meaningful operation is performed once per iteration?
+> What meaningful operation happens once per iteration, item, request, task, state, or unit of work?
 
-The body should either:
+If the answer is conceptually simple but the body mixes selection, mechanics, transformation, persistence, bookkeeping, and other lower-level details, expose the meaningful per-unit operation.
 
-* directly read as a short workflow at one semantic altitude; or
-* delegate the iteration's main responsibility to a meaningful operation.
+The repeated structure itself should remain understandable at its own altitude.
 
-For example:
+### Completion criterion
 
-```python
-for scene in scenes:
-    convert_scene(scene)
-```
+For every major repeated or delegated unit of work at an orchestration level, the reader can identify what happens **once per unit** without mentally executing a dense block of lower-level mechanics.
 
-or:
+---
 
-```python
-for frame in frames:
-    observations = prepare_observations(frame)
-    ego_state = compute_ego_state(frame)
-    write_frame(frame, observations, ego_state)
-```
+## 5. Align semantic altitude
 
-A major loop remains structurally dense when one iteration mixes the entity lifecycle with filenames, paths, serialization, indexing, bookkeeping, and unrelated supporting mechanics.
+Review each orchestration function and each structural unit changed during the refactoring.
 
-Do not extract a loop body merely because it is long. Extract it when the iteration itself represents a meaningful operation or lifecycle that should be visible in the surrounding narrative.
+Determine the semantic altitude implied by its purpose.
 
-**Completion criterion:** every major orchestration loop makes the meaning of one iteration immediately clear, and its body does not conceal a major narrative operation inside mixed-altitude mechanics.
+Then inspect its major statements.
 
-### 6. Check progressive disclosure recursively
-
-Read the result as if navigating the code by expanding one function at a time.
-
-The intended reading order is:
+Statements at one orchestration level should normally describe peer operations such as:
 
 ```text
-program purpose
-    ↓
-major workflow stages
-    ↓
-one stage's sub-operations
-    ↓
-implementation of one sub-operation
-    ↓
-low-level mechanics
+acquire
+interpret
+plan
+execute
+report
 ```
 
-Apply the **collapse test** at every orchestration level:
+A passage that repeatedly alternates between a meaningful operation and its low-level realization creates an altitude jump:
 
-> If the implementations called from this function are collapsed, does the visible function still explain its level of the workflow?
+```text
+meaningful operation
+primitive mechanics
+representation detail
+meaningful operation
+local bookkeeping
+meaningful operation
+```
 
-Then expand one operation:
+When such a jump interrupts the narrative, place the lower-altitude work behind a meaningful boundary at the next level down.
 
-> Does the expanded function reveal one coherent next level of detail?
+After extraction, inspect the new helper as well. It should reveal a coherent next level rather than merely inherit the same mixture in a different location.
 
-Continue this check through the important path rather than applying it only to the entry point.
+### Completion criterion
 
-A clean top-level function does not compensate for a dense second-level orchestration function.
+This step is complete only when:
 
-Keep closely related implementation details together so following one operation does not require unnecessary jumping across unrelated parts of the codebase.
+1. the major statements within each changed orchestration unit operate at approximately one semantic altitude;
+2. movement to a lower altitude occurs through a meaningful boundary; and
+3. following that boundary reveals a coherent next level of detail.
 
-**Completion criterion:** every important orchestration layer forms a readable narrative of its own, and expanding a meaningful operation reveals one coherent additional level of detail.
+---
 
-## Stop condition
+## 6. Verify progressive disclosure at every orchestration layer
 
-Stop restructuring when all of these are true:
+Do not stop after cleaning only the outermost function.
 
-1. The core narrative is short, explicit, and easy to state.
-2. Every major narrative operation has a recognizable counterpart in the code structure.
-3. The happy path is visually dominant in the orchestration layer.
-4. Every major orchestration function reads at a coherent semantic altitude.
-5. Every major loop makes the meaning of one iteration clear.
-6. Collapsing helper implementations still leaves an understandable workflow at each important orchestration level.
-7. Expanding one operation reveals one coherent next level of detail.
-8. Helper boundaries provide semantic compression rather than merely shortening functions.
-9. Further extraction would mainly rearrange code or add indirection rather than expose additional meaning.
+Read the changed call structure top-down.
 
-The goal is not maximal decomposition.
+At each orchestration layer, apply the same test:
 
-The goal is the **minimum hierarchy of meaningful operations required for the core logic to reveal itself progressively**.
+> Does this level explain one coherent part of the workflow before exposing its mechanics?
 
-## Verification
+Then apply the **collapse test**:
+
+> If implementation bodies below this level were collapsed in the editor, would the visible code still explain the workflow at this level?
+
+Next apply the **expand test**:
+
+> If I expand one major operation, do I receive the next useful level of explanation?
+
+A good structure should behave like controlled zoom:
+
+```text
+overview
+    ↓ expand one operation
+stage workflow
+    ↓ expand one operation
+local algorithm or mechanism
+    ↓
+primitive implementation
+```
+
+Avoid structures where clean outer layers merely lead into another dense mixture of unrelated altitudes.
+
+### Completion criterion
+
+Every changed orchestration layer independently passes both:
+
+* the collapse test; and
+* the expand test.
+
+The hierarchy remains explanatory as the reader moves downward, not only at the top.
+
+---
+
+## 7. Review abstraction value
+
+Inspect every helper, method, class, or other boundary introduced by this refactoring.
+
+Ask what semantic compression it provides.
+
+A strong boundary lets the reader replace several details with one meaningful thought.
+
+A weak boundary merely gives a name to code that was already easier to read inline.
+
+Prefer boundaries that represent:
+
+* a meaningful workflow step;
+* a meaningful transformation;
+* a meaningful responsibility;
+* a coherent next level of explanation.
+
+Keep straightforward mechanics local when introducing a boundary would add navigation without reducing cognitive load.
+
+### Completion criterion
+
+Every newly introduced structural boundary has a clear explanatory role in the progressive-disclosure hierarchy.
+
+Removing its name and inlining its body would make the surrounding narrative meaningfully harder to read.
+
+---
+
+# Final reading test
+
+Before stopping, return to the highest relevant entry point and read the code in normal reading order.
+
+Do not judge it from memory of the refactoring.
+
+Perform these tests.
+
+## Narrative test
+
+Can you state the core workflow using the operations that are visibly present in the code?
+
+Important verbs from the reconstructed narrative should have recognizable structural counterparts.
+
+## Happy-path test
+
+Can a new reader follow the normal successful workflow without first understanding supporting mechanics?
+
+## Repetition test
+
+For every important repeated or delegated unit of work, is the once-per-unit operation apparent?
+
+## Altitude test
+
+Does each orchestration unit mostly speak at one semantic altitude?
+
+## Collapse test
+
+With lower-level implementations hidden, does each visible level still explain itself?
+
+## Expand test
+
+Does expanding one operation reveal one coherent next level of understanding?
+
+## Compression test
+
+Do introduced boundaries remove cognitive detail, rather than merely move lines elsewhere?
+
+If any test fails, continue restructuring at the level where it fails.
+
+---
+
+# Stop condition
+
+Stop when all of the following are true:
+
+1. The core narrative is visible in the code structure.
+2. The happy path reads as a coherent sequence of meaningful operations.
+3. Every major narrative operation has a recognizable structural counterpart unless its inline form is already clearer.
+4. Major repeated or delegated units expose what happens once per unit.
+5. Each changed orchestration layer operates at a coherent semantic altitude.
+6. Progressive disclosure works across the hierarchy, not only at the outermost level.
+7. Introduced boundaries provide semantic compression.
+8. Further restructuring would mostly rename, relocate, shorten, or subdivide code without revealing additional meaning.
+
+The target is the **minimum hierarchy that makes the core logic obvious**.
+
+---
+
+# Verification
 
 Preserve observable behavior while restructuring.
 
-Run the most relevant existing tests, checks, or executable validation available for the changed code.
+Run the most relevant existing tests, checks, type checks, linters, builds, or executable validations available for the changed code.
 
-Then perform a structural reread from the entry point.
+Fix any unintended behavioral change introduced by the restructuring.
 
-Do not judge success from the helper functions you just created. Follow the program as a new reader would:
+Finish by briefly reporting:
 
-1. read the entry point;
-2. follow the happy path;
-3. inspect each major loop;
-4. expand the major operations one level at a time;
-5. stop when implementation mechanics become the appropriate subject.
-
-Before finishing, verify that every major operation identified in the original core narrative is now visible in that reading path.
-
-Report briefly:
-
-* the core narrative;
-* the major narrative operations that were made explicit;
-* the main structural changes used to expose them;
-* the checks used to verify preserved behavior.
+* the core narrative identified;
+* which parts of the previous structure obscured it;
+* the structural changes used to expose it;
+* the checks used to verify behavior.
 
