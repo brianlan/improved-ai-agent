@@ -10,33 +10,57 @@ Refactor existing code so a reader encounters the **core narrative before implem
 
 Preserve observable behavior, interfaces that must remain stable, data formats, and correctness constraints.
 
-Concentrate restructuring effort on the normal successful workflow. Keep supporting concerns stable unless moving them is necessary to expose that workflow.
+This skill optimizes one thing above all others:
+
+> **Make the core logic obvious through progressive disclosure.**
+
+All other rules in this skill serve that goal. Do not improve one local property by damaging a clearer narrative or a useful semantic hierarchy.
 
 Use `$ARGUMENTS` to determine scope. If scope is not explicit, focus on the code currently being worked on rather than expanding into unrelated parts of the repository.
 
-## Leading concepts
+# Priority
 
-### Core narrative
+Apply the following priorities in order.
+
+## 1. Core narrative
+
+The important workflow must be recognizable directly from the code.
+
+## 2. Progressive disclosure
+
+The reader should be able to understand the code by moving from purpose → workflow → stage → mechanics.
+
+## 3. Supporting structure
+
+Use semantic altitude, repeated-unit visibility, semantic compression, and boundary containment to protect that progressive disclosure.
+
+When supporting rules conflict, prefer the structure that preserves the clearer core narrative and hierarchy.
+
+---
+
+# Leading concepts
+
+## Core narrative
 
 The smallest sequence of meaningful operations that explains what the code accomplishes from initiation to outcome.
 
 It describes the important **verbs** of the system rather than the mechanics used to implement them.
 
-### Happy path
+## Happy path
 
 The normal successful workflow.
 
-The happy path should dominate the reading experience at orchestration levels.
+At orchestration levels, this path should dominate the reading experience.
 
-### Semantic altitude
+## Semantic altitude
 
 The conceptual level at which a statement operates.
 
 Higher-altitude statements describe workflow, responsibilities, or meaningful transformations.
 
-Lower-altitude statements describe how those operations are realized: representation handling, formatting, indexing, primitive computation, serialization, protocol mechanics, local bookkeeping, or similar detail.
+Lower-altitude statements describe realization details such as representation manipulation, formatting, indexing, serialization, primitive computation, protocol mechanics, or local bookkeeping.
 
-### Progressive disclosure
+## Progressive disclosure
 
 Code should reveal itself in useful layers:
 
@@ -50,24 +74,32 @@ one stage's workflow
 implementation mechanics
 ```
 
-Expanding one meaningful operation should reveal the next useful level of understanding.
+Opening one meaningful operation should reveal the next useful level of understanding.
 
-### Semantic compression
+## Semantic compression
 
-A boundary earns its existence when its name allows several implementation details to be understood as one meaningful concept.
+A boundary provides semantic compression when its name lets the reader hold several implementation details as one meaningful thought.
 
-A boundary that merely moves or shortens code provides little semantic compression.
+## Meaningful boundary
 
-### Boundary leakage
+A boundary is meaningful when it carries an important concept in the code's narrative or hierarchy.
 
-A semantic boundary leaks when understanding or invoking it requires its caller to manipulate lower-level pieces that conceptually belong behind that boundary.
+Typical meaningful boundaries represent a:
 
-A good boundary hides implementation structure at both:
+* workflow step;
+* transformation;
+* responsibility;
+* repeated unit of work;
+* coherent stage;
+* meaningful piece of context.
 
-* the implementation body; and
-* the call site.
+Its value comes from the concept it exposes, not from its size.
 
-The goal is not minimal argument count. The goal is that callers work primarily with concepts appropriate to their own semantic altitude.
+## Boundary leakage
+
+A meaningful boundary leaks when its caller must manipulate lower-level pieces that conceptually belong behind that boundary.
+
+Leakage weakens progressive disclosure because the implementation structure becomes visible at the wrong semantic altitude.
 
 ---
 
@@ -75,7 +107,7 @@ The goal is not minimal argument count. The goal is that callers work primarily 
 
 ## 1. Reconstruct the core narrative
 
-Read enough surrounding code to understand what the implementation actually does before restructuring it.
+Read enough surrounding code to understand what the implementation actually does before changing its structure.
 
 Identify:
 
@@ -85,7 +117,7 @@ Identify:
 * where meaningful outcomes or side effects occur;
 * what constitutes the normal successful path.
 
-Express the result internally as a short ordered sequence of verbs.
+Express the workflow internally as a short ordered sequence of meaningful verbs.
 
 For example:
 
@@ -96,61 +128,61 @@ receive → interpret → decide → execute → publish
 rather than:
 
 ```text
-read field → build string → index map → call helper → write bytes
+read field → construct key → mutate map → call helper → write bytes
 ```
 
-The actual verbs must come from the program. Do not force the code into a predefined architecture.
+The actual verbs must come from the program. Do not impose a predefined architecture.
 
 ### Completion criterion
 
 You can state a short core narrative in which every operation:
 
-1. represents meaningful progress toward the program's outcome;
-2. can be understood without unrelated implementation mechanics; and
-3. is important enough that hiding it would materially weaken understanding of the workflow.
+1. represents meaningful progress toward the outcome;
+2. can be understood without unrelated mechanics; and
+3. matters enough that hiding it would materially weaken understanding of the workflow.
 
 ---
 
-## 2. Align the narrative with the code structure
+## 2. Align the narrative with the code
 
-For each major operation in the reconstructed narrative, locate where that operation is visible in the code.
+Locate where each major narrative operation appears in the implementation.
 
-A meaningful operation may appear as:
+A meaningful operation may be expressed by:
 
-* a clearly named function or method call;
+* a function or method;
 * a compact self-explanatory block;
 * an operation on an existing abstraction;
-* another structural unit appropriate to the language and codebase.
+* another structural unit natural to the language and codebase.
 
 Aim for **narrative–structure alignment**:
 
-> The important verbs in the reader's mental model should be recognizable in the visible code structure.
+> Important verbs in the reader's mental model should be recognizable in the visible code structure.
 
-When an important operation is spread across lower-level mechanics, give that operation an appropriate structural boundary.
+When an important operation is scattered across lower-level mechanics, give it an appropriate structural expression.
 
-When several distinct narrative operations are hidden behind one opaque block, expose the distinctions necessary to understand the workflow.
+When distinct meaningful operations are fused into an opaque block, expose the distinctions necessary for understanding.
 
-Keep implementation inline when its meaning is already obvious and introducing another boundary would add navigation without adding understanding.
+Keep code inline when its meaning is already obvious and another boundary would merely add navigation.
 
 ### Completion criterion
 
-Every major operation from the core narrative has a recognizable structural counterpart, unless its inline implementation is already the clearest expression of that operation.
+Every major operation from the core narrative has a recognizable counterpart in the code unless its inline representation is already clearer.
 
-A reader does not need to reconstruct an important workflow step from scattered mechanics.
+A reader does not need to infer an important workflow step from scattered implementation detail.
 
 ---
 
 ## 3. Expose the happy path
 
-Restructure the highest relevant orchestration layer so the normal successful workflow reads as a coherent sequence.
-
-Prefer visible statements that answer:
+Restructure the highest relevant orchestration layer so it reads primarily as:
 
 > What happens next?
 
-Use semantic compression to move distracting mechanics one level lower.
+Use meaningful operations to hide details that do not belong at this altitude.
 
-The target is not shorter functions. A longer function with one coherent narrative is preferable to a shorter function assembled from weak abstractions.
+Prefer semantic compression over mechanical extraction.
+
+The target is not shorter functions. A longer coherent narrative is better than a shorter function made of weak abstractions.
 
 ### Completion criterion
 
@@ -159,37 +191,37 @@ Reading only the highest relevant orchestration layer is sufficient to answer:
 * What happens first?
 * What are the major stages?
 * What meaningful unit is repeatedly processed, if any?
-* What meaningful outcome or effect is produced?
+* What outcome or effect is produced?
 
-The answers come primarily from the visible operations rather than reverse-engineering implementation details.
+The reader obtains those answers mainly from visible operations rather than reverse-engineering mechanics.
 
 ---
 
-## 4. Expose repeated units of work
+## 4. Expose meaningful repeated units
 
 Inspect structures that repeatedly perform meaningful work, including loops, batches, handlers, pipelines, dispatch, traversal, callbacks, task execution, or state transitions.
 
 Ask:
 
-> What meaningful operation happens once per unit?
+> What happens once per unit?
 
-The repeated structure should make that answer apparent.
+When one iteration conceptually performs one meaningful operation but its body exposes many lower-level mechanics, make that operation visible.
 
-If one iteration conceptually performs one operation but its body exposes many unrelated mechanics, restructure the body so the once-per-unit operation becomes visible.
+The enclosing repeated structure should remain at its own semantic altitude.
 
 ### Completion criterion
 
-For every major repeated or delegated unit at an orchestration level, a reader can identify what happens once per unit without mentally executing a dense collection of lower-level steps.
+For every major repeated or delegated unit at an orchestration level, the once-per-unit operation is immediately recognizable without mentally executing a dense implementation block.
 
 ---
 
 ## 5. Align semantic altitude
 
-Determine the semantic altitude implied by each orchestration unit's purpose.
+For each orchestration unit, determine the semantic altitude implied by its purpose.
 
-Its major statements should normally operate at approximately that same altitude.
+Its major statements should normally operate near that altitude.
 
-A coherent orchestration layer resembles:
+A coherent layer resembles:
 
 ```text
 acquire
@@ -199,103 +231,123 @@ execute
 report
 ```
 
-An altitude mixture resembles:
+A mixed layer resembles:
 
 ```text
 meaningful operation
 representation manipulation
-path or key construction
 meaningful operation
 primitive computation
 bookkeeping
 meaningful operation
 ```
 
-When lower-altitude mechanics interrupt a higher-level narrative, place them behind a meaningful boundary at the next level down.
+When lower-level mechanics interrupt a higher-level narrative, place those mechanics behind a meaningful boundary at the next level down.
 
-Then inspect that boundary itself. It should reveal a coherent next layer rather than move the same mixture elsewhere.
-
-### Completion criterion
-
-For each changed orchestration unit:
-
-1. its major statements operate at approximately one semantic altitude;
-2. descent to a lower altitude occurs through a meaningful boundary; and
-3. opening that boundary reveals a coherent next level of detail.
-
----
-
-## 6. Contain implementation detail at boundaries
-
-Inspect the interfaces between the semantic layers created or exposed by the refactoring.
-
-A boundary does not fully provide progressive disclosure if its body is hidden but its caller still needs to enumerate the internal pieces of that hidden layer.
-
-For each meaningful call or boundary, ask:
-
-> Does the caller provide concepts that belong at the caller's semantic altitude, or is it assembling the callee's internal machinery?
-
-For example, an operation conceptually expressed as:
-
-```python
-result = execute(task, context)
-```
-
-keeps its call site near the caller's narrative.
-
-An interface such as:
-
-```python
-result = execute(
-    task_id,
-    raw_payload,
-    cache_handle,
-    retry_state,
-    serializer,
-    output_directory,
-    timeout_seconds,
-    internal_flags,
-)
-```
-
-may indicate leakage if those pieces mainly describe how `execute` works rather than what the caller is deciding.
-
-The number of parameters is only a signal, never the criterion. A function may legitimately need many independent inputs. Likewise, a short argument list can still expose the wrong concepts.
-
-When leakage obscures the caller's narrative, look for the smallest appropriate way to restore the boundary. Depending on the existing design, that may mean passing an already meaningful object, relocating ownership of state, adjusting the responsibility boundary, or using another idiom natural to the codebase.
-
-Choose the representation from the code's needs. Do not introduce an object, class, context container, closure, or framework pattern merely to reduce parameter count.
+Then inspect the lower level as well. It should reveal a coherent next stage rather than simply inherit the same mixture.
 
 ### Completion criterion
 
-At each changed semantic boundary:
+For every changed orchestration unit:
 
-1. the caller primarily speaks in concepts appropriate to its own altitude;
-2. lower-level implementation structure is owned by the layer that uses it;
-3. invoking the operation does not force the caller to reconstruct the callee's internals; and
-4. any remaining detailed arguments are independently meaningful inputs rather than accidental pieces of hidden implementation.
+1. major statements operate at approximately one semantic altitude;
+2. movement downward occurs through a meaningful boundary; and
+3. opening that boundary reveals a coherent next level.
 
 ---
 
-## 7. Verify progressive disclosure recursively
+## 6. Classify boundaries before changing them
+
+Before removing, merging, or substantially changing an existing or newly introduced boundary, determine whether it is **meaningful**.
+
+Ask:
+
+* Does its name express an important narrative verb?
+* Does it represent the meaningful once-per-unit operation of a loop or handler?
+* Does it create a useful step in progressive disclosure?
+* Does it provide real semantic compression?
+* Would inlining it force the caller to understand lower-level mechanics?
+
+If the answer is yes, treat it as a **meaningful boundary**.
+
+Meaningful boundaries are structural assets. Preserve their conceptual role unless the surrounding narrative itself is wrong.
+
+If a boundary adds little meaning and mainly relocates obvious code, it may be simplified, merged, or inlined when doing so improves the narrative.
+
+### Completion criterion
+
+Every boundary being removed or collapsed has been judged expendable because it contributes little narrative meaning or progressive disclosure.
+
+No useful narrative step disappears merely to simplify an interface or reduce indirection.
+
+---
+
+## 7. Repair boundary leakage without collapsing meaning
+
+Inspect meaningful boundaries for leakage.
+
+Ask:
+
+> Does the caller interact with concepts appropriate to its own altitude, or must it assemble the callee's internal machinery?
+
+Detailed arguments are not automatically leakage. They may be genuinely independent inputs.
+
+Leakage exists when callers are forced to know pieces mainly because of how the callee is implemented.
+
+When a **meaningful boundary leaks**, preserve the boundary's conceptual role first.
+
+Then look for the smallest change that moves lower-level ownership back behind the boundary.
+
+Depending on the existing design, this may involve:
+
+* deriving implementation-specific values inside the lower layer;
+* relocating ownership of state;
+* passing an already meaningful existing object;
+* changing which layer prepares information;
+* adjusting responsibility boundaries;
+* using another idiom natural to the codebase.
+
+Choose the representation from the code's actual needs.
+
+A leaking meaningful boundary should normally be **repaired rather than erased**.
+
+Removing it is appropriate only when, after re-evaluating the narrative, the boundary itself no longer represents a useful concept.
+
+### Completion criterion
+
+For each changed meaningful boundary:
+
+1. its narrative role remains visible;
+2. the caller primarily speaks in concepts appropriate to its own altitude;
+3. implementation-specific structure is owned by the layer that uses it;
+4. remaining detailed inputs are genuinely meaningful to the caller; and
+5. leakage was not "solved" merely by inlining the hidden implementation into the caller.
+
+---
+
+## 8. Verify progressive disclosure recursively
 
 Read the changed structure top-down.
 
-At every orchestration layer, ask:
+At every orchestration level, ask:
 
 > Does this level explain one coherent part of the workflow before exposing its mechanics?
 
 Apply the **collapse test**:
 
-> If implementations below this level are collapsed, does the visible code still explain the workflow at this level?
+> If implementations below this level are hidden, does the visible code still explain the workflow at this level?
 
 Apply the **expand test**:
 
-> If one major operation is expanded, does it reveal one coherent next level of explanation?
+> If one major operation is opened, does it reveal one coherent next level?
 
 Apply the **call-site test**:
 
-> Does using the operation preserve the abstraction, or does its invocation expose the lower level that the operation was meant to hide?
+> Does invoking the operation preserve its abstraction, or does the caller have to reconstruct its implementation structure?
+
+Apply the **preservation test**:
+
+> Did improving a lower-level concern remove a useful operation from the higher-level narrative?
 
 The desired structure behaves like controlled zoom:
 
@@ -314,47 +366,43 @@ primitive implementation
 Every changed orchestration layer passes:
 
 * the collapse test;
-* the expand test; and
-* the call-site test.
+* the expand test;
+* the call-site test; and
+* the preservation test.
 
-The hierarchy remains explanatory as the reader moves both downward into implementations and horizontally across call sites.
+A local improvement has not degraded a higher-level narrative.
 
 ---
 
-## 8. Review abstraction value
+## 9. Review abstraction value
 
-Inspect every helper, method, class, data holder, or other structural boundary introduced by this refactoring.
+Inspect every helper, method, class, data holder, or other structural boundary introduced or retained by the refactoring.
 
 Ask:
 
 > What meaning does this boundary allow the reader to hold as one thought?
 
-Strong boundaries represent a meaningful:
+Strong boundaries support the progressive-disclosure hierarchy.
 
-* workflow step;
-* transformation;
-* responsibility;
-* unit of work;
-* piece of context;
-* level of explanation.
+Weak boundaries mostly increase navigation or bundle unrelated values.
 
-Keep straightforward mechanics local when a new boundary would mostly increase navigation.
+Prefer the minimum structure that preserves the useful hierarchy.
 
-Prefer the smallest structural change that restores a coherent narrative and useful progressive disclosure.
+Do not introduce a class, context object, parameter object, manager, wrapper, or other container merely to hide a long argument list.
+
+Bundling is useful only when the bundle itself represents a coherent concept with meaningful ownership.
 
 ### Completion criterion
 
-Every introduced boundary has a clear explanatory role.
+Every introduced abstraction has a clear explanatory or ownership role.
 
-Inlining or removing it would make the surrounding workflow materially harder to understand, or would cause lower-level implementation structure to leak upward again.
+Its existence improves the hierarchy rather than merely relocating complexity.
 
 ---
 
 # Final reading test
 
-Return to the highest relevant entry point and read the code in normal reading order.
-
-Judge the resulting code as a reader encountering it for the first time.
+Return to the highest relevant entry point and read the code as a new reader.
 
 ## Narrative test
 
@@ -366,7 +414,7 @@ Can the normal successful workflow be followed before understanding supporting m
 
 ## Repetition test
 
-For every important repeated or delegated unit, is the once-per-unit operation apparent?
+For important repeated or delegated work, is the once-per-unit operation apparent?
 
 ## Altitude test
 
@@ -374,7 +422,7 @@ Does each orchestration unit mostly speak at one semantic altitude?
 
 ## Collapse test
 
-With lower-level implementations hidden, does each visible layer still explain itself?
+With lower-level implementations hidden, does each visible level explain itself?
 
 ## Expand test
 
@@ -382,13 +430,17 @@ Does opening one operation reveal one coherent next level?
 
 ## Call-site test
 
-Do calls preserve their semantic boundary, or do lower-level implementation details leak into the caller?
+Do meaningful calls preserve their abstraction rather than expose unnecessary lower-level structure?
+
+## Preservation test
+
+Did any attempt to simplify an interface or abstraction make the surrounding narrative less visible?
 
 ## Compression test
 
-Do introduced boundaries reduce the number of implementation details the reader must hold simultaneously?
+Do structural boundaries reduce the implementation detail the reader must hold simultaneously?
 
-If a test fails, continue restructuring at the layer where it fails.
+If a local change improves one test while making a higher-priority test worse, prefer the version that better preserves the core narrative and progressive disclosure.
 
 ---
 
@@ -396,17 +448,21 @@ If a test fails, continue restructuring at the layer where it fails.
 
 Stop when all of the following are true:
 
-1. The core narrative is visible in the code structure.
+1. The core narrative is directly visible in the code structure.
 2. The happy path reads as a coherent sequence of meaningful operations.
-3. Every major narrative operation has a recognizable structural counterpart unless its inline form is clearer.
-4. Major repeated or delegated units expose what happens once per unit.
-5. Each changed orchestration layer operates at a coherent semantic altitude.
+3. Major narrative operations have recognizable structural counterparts unless their inline form is clearer.
+4. Important repeated or delegated units expose what happens once per unit.
+5. Changed orchestration layers operate at coherent semantic altitudes.
 6. Progressive disclosure works recursively across the hierarchy.
-7. Semantic boundaries hide unnecessary implementation structure from their callers as well as from their readers.
-8. Introduced boundaries provide meaningful semantic compression.
-9. Further restructuring would mostly rename, relocate, shorten, bundle, or subdivide code without revealing additional meaning.
+7. Meaningful boundaries retain their narrative role.
+8. Boundary leakage has been reduced where it materially obscured higher-level code.
+9. Boundary improvements have not pushed lower-level mechanics back into callers.
+10. Introduced abstractions provide semantic compression or meaningful ownership.
+11. Further restructuring would mostly rename, relocate, bundle, shorten, or subdivide code without revealing additional meaning.
 
-The target is the **minimum hierarchy that makes the core logic obvious without leaking its implementation structure upward**.
+The target is:
+
+> **The minimum hierarchy that makes the core logic obvious while preserving the meaningful boundaries that carry it.**
 
 # Verification
 
@@ -419,8 +475,9 @@ Fix unintended behavioral changes introduced by restructuring.
 Finish by briefly reporting:
 
 * the core narrative identified;
-* which structural details previously obscured it;
-* which boundaries or orchestration layers were changed;
-* any important boundary leakage that was removed;
+* which details previously obscured it;
+* which meaningful boundaries were exposed or preserved;
+* which boundary leakage was repaired;
+* any tempting simplification that was intentionally avoided because it would weaken progressive disclosure;
 * the checks used to verify behavior.
 
