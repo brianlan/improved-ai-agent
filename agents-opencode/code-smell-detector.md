@@ -1,8 +1,8 @@
 ---
 description: A conservative refactoring reviewer to inspect the code and identify refactoring opportunities, but making no modifications to any code.
 mode: subagent
-model: openai/gpt-5.5
-reasoningEffort: "high"
+model: openai/gpt-6.1-sol
+reasoningEffort: "max"
 permission:
   edit: deny
   webfetch: allow

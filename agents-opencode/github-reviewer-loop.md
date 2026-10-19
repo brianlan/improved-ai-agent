@@ -1,7 +1,7 @@
 ---
 description: Using the `gh` CLI, this agent idempotently audits open PRs against repository standards, linked issues, and "Ponytail" anti-over-engineering rules to submit a **structured decision** (`APPROVE`/`REQUEST_CHANGES`/`COMMENT_ONLY`) with strict auto-merge gatekeeping.
-model: ark-coding-plan/glm-5.2
-reasoningEffort: "high"
+model: openai/gpt-6.1-sol
+reasoningEffort: "max"
 mode: primary
 permission:
   question: deny
@@ -20,10 +20,19 @@ permission:
     "/var/folders/**": allow
     "/Users/rlan/projects/worktrees/**": allow
     "/home/rlan/projects/worktrees/**": allow
+    "/home/rlan/projects/**": allow
+    "/Users/rlan/projects/**": allow
     "/ssd5/datasets/**": allow
     "/ssd4/envs/**": allow
+    "/ssd4/cache/**": allow
+    "/home/rlan/.config/opencode/**": allow
+    "/home/rlan/.opencode/**": allow
+    "/home/rlan/.agents/**": allow
+    "/Users/rlan/.agents/**": allow
   task:
     "*": ask
+    explore: allow
+    general: allow
   webfetch: allow
   websearch: allow
   skill:

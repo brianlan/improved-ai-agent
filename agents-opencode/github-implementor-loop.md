@@ -1,7 +1,7 @@
 ---
 description: A GitHub Implementor Agent to strictly prioritize PR maintenance and feedback resolution over new issue implementation, utilizing the `gh` CLI and isolated worktrees under rigorous safety and testing constraints.
-model: ollama-cloud/glm-5.2
-reasoningEffort: "high"
+model: zhipuai-coding-plan/glm-5.3-flash
+reasoningEffort: "max"
 mode: primary
 permission:
   question: deny
@@ -15,6 +15,7 @@ permission:
   lsp: allow
   external_directory: 
     "*": deny
+    "/ssd4/aco-private-tasks/**": allow
     "../worktrees/**": allow
     "/tmp/**": allow
     "/var/folders/**": allow
