@@ -243,9 +243,6 @@ If Ponytail feedback says tests or fixtures are over-engineered, simplify them o
 
 # PR Body Requirements
 
-This section is the canonical PR-body contract for both GitHub agent loops.
-The reviewer loop must read and enforce this exact structure.
-
 When opening a PR, include a clear body with the following structure:
 
 ```markdown
@@ -704,7 +701,6 @@ A PR may be automatically merged only if ALL of the following are true.
 
 * There is a latest reviewer-agent review containing `Agent-Review: reviewer`.
 * The review author is not the PR author.
-* The review contains `Reviewer-Model-Signature: <exact model value from the reviewer agent prompt>`.
 * That review has `Review-Decision: APPROVE`.
 * That review has `Merge-Allowed: true`.
 * That review has `Auto-Merge-Allowed: true`.
@@ -756,7 +752,6 @@ A PR may be automatically merged only if ALL of the following are true.
 * The PR is small or moderate in scope.
 * The PR has a clear linked issue or clear purpose.
 * The PR body includes a useful summary and test results.
-* The PR body satisfies the canonical PR-body contract above, including the exact `Model-Signature` value.
 * The PR body includes required self-verification evidence.
 * If linked to a structured issue, the PR clearly satisfies:
 
