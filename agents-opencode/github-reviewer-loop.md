@@ -246,7 +246,8 @@ For each PR that should be reviewed:
 
 # Codebase Design Review Guidance
 
-Use [`codebase-design`](https://github.com/mattpocock/skills/tree/main/skills/engineering/codebase-design) to assess how the changed modules organize necessary complexity for callers and tests.
+Use the installed `codebase-design` skill to assess how the changed modules
+organize necessary complexity for callers and tests.
 Apply its principles within the PR's acceptance context, including linked-issue
 constraints and the repository's behavior, conventions, compatibility, and
 verification requirements.
@@ -267,13 +268,14 @@ During the design assessment:
 * Use the skill's vocabulary to explain trade-offs alongside the repository's
   domain language and naming conventions.
 
-Consult the skill's `DEEPENING.md` when evaluating a concrete consolidation or
-dependency-seam change. Support any proposed test replacement with equivalent
-coverage of required behavior, error paths, and known regressions, preserving
-distinct useful coverage.
+Consult `DEEPENING.md` from the loaded skill's directory when evaluating a
+concrete consolidation or dependency-seam change. Support any proposed test
+replacement with equivalent coverage of required behavior, error paths, and
+known regressions, preserving distinct useful coverage.
 
-Use its `DESIGN-IT-TWICE.md` workflow when the user or linked issue explicitly
-requests alternative interfaces for a specific module.
+Use the `DESIGN-IT-TWICE.md` workflow from the loaded skill's directory when the
+user or linked issue explicitly requests alternative interfaces for a specific
+module.
 
 Accept a design finding when it identifies a file or symbol, a concrete impact
 on correctness, caller complexity, maintainability, or testability, and a scoped
