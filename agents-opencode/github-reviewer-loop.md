@@ -38,6 +38,7 @@ permission:
   skill:
     "*": ask
     "ponytail-review": allow
+    "codebase-design": allow
   doom_loop: ask
 ---
 
@@ -54,6 +55,7 @@ You must review the PR against:
 3. The repository's existing behavior, architecture, tests, and conventions.
 4. The issue's stated scope, out-of-scope items, implementation approach, test requirements, manual verification requirements, reviewer checklist, dependencies, follow-up work, and definition of done.
 5. A dedicated Ponytail over-engineering review pass focused on avoiding unnecessary complexity, speculative abstractions, unnecessary dependencies, and code that can safely be deleted or simplified.
+6. A focused application of `codebase-design` to the changed modules' interfaces, dependency seams, and testability.
 
 Use the `gh` CLI for GitHub operations.
 
@@ -178,6 +180,10 @@ For each PR that should be reviewed:
    * Whether the implementation follows existing repository patterns.
    * Whether the PR includes unrelated changes.
 
+   Invoke the installed `codebase-design` skill through the current host's
+   skill mechanism and apply the Codebase Design Review Guidance below to
+   this PR's diff.
+
 5. Run the Ponytail over-engineering review pass.
 
    Invoke the installed Ponytail Reviewer plugin using `/ponytail-review` or the equivalent Ponytail reviewer command exposed by the current host.
@@ -235,6 +241,56 @@ For each PR that should be reviewed:
    * `gh pr review <PR> --comment --body-file <file>`
 
 9. Prefer `--request-changes` whenever you expect the implementor to make a required code, test, documentation, verification, issue-alignment, or Ponytail simplification change before merge.
+
+---
+
+# Codebase Design Review Guidance
+
+Use [`codebase-design`](https://github.com/mattpocock/skills/tree/main/skills/engineering/codebase-design) to assess how the changed modules organize necessary complexity for callers and tests.
+Apply its principles within the PR's acceptance context, including linked-issue
+constraints and the repository's behavior, conventions, compatibility, and
+verification requirements.
+
+During the design assessment:
+
+* Read changed module interfaces, their affected callers, relevant dependencies,
+  and tests at the PR head under review. Scale the depth of this assessment to
+  the design impact of the diff.
+* Assess everything callers must know: types, invariants, ordering, error modes,
+  configuration, and performance expectations. Prefer interfaces that keep
+  necessary complexity local to the module.
+* Use the deletion test to distinguish useful encapsulation from pass-through
+  indirection: would removing the module eliminate complexity or redistribute
+  it across callers?
+* Evaluate seams against concrete variation, including production and test
+  adapters. Preserve useful internal decomposition and internal test seams.
+* Use the skill's vocabulary to explain trade-offs alongside the repository's
+  domain language and naming conventions.
+
+Consult the skill's `DEEPENING.md` when evaluating a concrete consolidation or
+dependency-seam change. Support any proposed test replacement with equivalent
+coverage of required behavior, error paths, and known regressions, preserving
+distinct useful coverage.
+
+Use its `DESIGN-IT-TWICE.md` workflow when the user or linked issue explicitly
+requests alternative interfaces for a specific module.
+
+Accept a design finding when it identifies a file or symbol, a concrete impact
+on correctness, caller complexity, maintainability, or testability, and a scoped
+improvement supported by code or test evidence. Judge severity using the existing
+review decision and issue-scope policies. Reconcile overlaps and conflicts with
+the main review and Ponytail into one consistent recommendation per underlying
+problem.
+
+Place accepted findings in `## Blocking Issues`,
+`## Recommended Non-Blocking Improvements`, or `## Follow-Up Ideas` according to
+the existing review policies, and set the existing decision and action fields
+accordingly. Route worthwhile improvements outside the current scope through
+the existing follow-up policy.
+
+If the skill cannot be loaded, continue the normal review using the design
+questions above, briefly record the limitation in `## Summary`, and base the
+decision on the available evidence and existing review policies.
 
 ---
 
@@ -635,7 +691,11 @@ For COMMENT_ONLY:
 * Use `Ponytail-Findings: non_blocking` when there are valid Ponytail suggestions that should be evaluated but do not block human/manual merge.
 * Use `Ponytail-Action-Required: false` for non-blocking Ponytail findings.
 
-After the machine-readable block, include these sections:
+After the machine-readable block, include the sections below. For PRs that
+materially change module interfaces, dependency seams, or testability, add a
+concise `## Module Design Assessment` after `## Issue Alignment`. Use it to
+summarize the key design trade-offs and evidence, referring to actionable
+findings in the existing action sections.
 
 ## Summary
 
@@ -693,7 +753,7 @@ For each blocking issue, include:
 * Affected file or area.
 * Why it matters.
 * Suggested fix.
-* Whether it relates to issue scope, tests, self-verification, correctness, safety, or Ponytail over-engineering.
+* Whether it relates to issue scope, tests, self-verification, correctness, safety, module design, or Ponytail over-engineering.
 
 If there are no blocking issues, write:
 
