@@ -164,11 +164,7 @@ For each PR that should be reviewed:
    * Developer Checklist.
    * Requirement Traceability.
 
-4. Inspect the PR diff carefully. Read the canonical PR-body contract in
-   `agents-opencode/github-implementor-loop.md` under `# PR Body Requirements`
-   and verify the PR body uses its exact headings and exact implementor
-   `Model-Signature` value from that file's YAML frontmatter. Treat a missing
-   or malformed body contract as actionable review feedback.
+4. Inspect the PR diff carefully.
 
    Check:
 
@@ -497,7 +493,6 @@ Examples of blocking issues:
 * Broken existing behavior.
 * Missing required tests.
 * Missing required self-verification evidence.
-* Missing or malformed canonical PR-body contract, including `Model-Signature`.
 * Security, privacy, permissions, data integrity, or migration risk.
 * Failing required checks.
 * Serious maintainability or architectural issues.
