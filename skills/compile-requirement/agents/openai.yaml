@@ -1,4 +1,0 @@
-interface:
-  display_name: "Compile Requirement"
-  short_description: "Turn an idea into a testable requirement spec"
-  default_prompt: "Use $compile-requirement to turn my feature idea into a validated, implementation-neutral requirement document."
